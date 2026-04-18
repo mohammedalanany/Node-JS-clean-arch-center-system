@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #ec4899;
+      --bg-dark: #0f172a;
+      --bg-panel: rgba(30, 41, 59, 0.7);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 100% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar { width: 280px; backdrop-filter: blur(16px); background: var(--bg-panel); border-left: 1px solid var(--glass-border); padding: 2rem; display: flex; flex-direction: column; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 800; background: linear-gradient(to left, #818cf8, #e879f9); -webkit-background-clip: text; color: transparent; margin-bottom: 3rem; }
+    .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; color: var(--text-muted); text-decoration: none; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; }
+    .nav-item i { font-size: 1.25rem; }
+    .nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.05); color: var(--text-main); transform: translateX(-5px); }
+    .nav-item.active { background: linear-gradient(270deg, rgba(79, 70, 229, 0.2) 0%, transparent 100%); border-right: 4px solid var(--primary); }
+    .logout-btn { margin-top: auto; background: rgba(239, 68, 68, 0.1); color: #f87171; }
+    
+    .main-content { flex: 1; padding: 2.5rem 4rem; overflow-y: auto; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+    h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; }
+    p.subtitle { color: var(--text-muted); margin-top: 0.5rem; }
+    
+    .action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 0.75rem 1.5rem; background: var(--primary); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; transition: background 0.3s ease; border: none; cursor: pointer; font-family: inherit; }
+    .action-btn.danger { background: #cf3737; }
+    .action-btn.secondary { background: #475569; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .ad-card { background: var(--bg-panel); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+    .ad-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
+    .ad-image { width: 100%; height: 180px; object-fit: cover; background: #1e293b; border-bottom: 1px solid var(--glass-border); }
+    .ad-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+    .ad-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .ad-desc { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5; flex: 1; }
+    .ad-footer { margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    .status-active { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .status-inactive { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1e293b; border: 1px solid var(--glass-border); border-radius: 20px; width: 100%; max-width: 500px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+    .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+    .modal-body { padding: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+    .form-control { width: 100%; padding: 0.8rem; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border); border-radius: 8px; color: white; font-family: inherit; }
+    .form-control:focus { outline: none; border-color: var(--primary); }
+    .modal-footer { padding: 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: flex-end; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class='bx bx-cube-alt'></i> نظام السنتر
+    </div>
+    
+    <nav class="nav-links">
+      <a href="/dashboard" class="nav-item">
+        <i class='bx bx-grid-alt'></i> لوحة القيادة
+      </a>
+      <a href="/centers" class="nav-item">
+        <i class='bx bx-buildings'></i> إدارة السناتر
+      </a>
+      <a href="/superadmin/ads" class="nav-item active">
+        <i class='bx bx-megaphone'></i> إدارة الإعلانات
+      </a>
+      
+      <form action="/logout" method="POST" style="margin-top: auto;">
+        <button type="submit" class="nav-item logout-btn" style="width: 100%; text-align: right; border: none; cursor: pointer; font-family: inherit;">
+          <i class='bx bx-log-out'></i> تسجيل الخروج
+        </button>
+      </form>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-header">
+      <div>
+        <h1><i class='bx bx-megaphone' style="color:var(--accent);"></i> الإعلانات والخدمات</h1>
+        <p class="subtitle">أضف إعلانات وروابط لتظهر في جميع لوحات تحكم المراكز والمدرسين</p>
+      </div>
+      <button class="action-btn" onclick="openAddModal()">
+        <i class='bx bx-plus'></i> إضافة إعلان جديد
+      </button>
+    </div>
+
+    <% if (ads.length === 0) { %>
+      <div style="text-align: center; padding: 4rem; color: var(--text-muted); background: var(--bg-panel); border: 1px solid var(--glass-border); border-radius: 16px;">
+        <i class='bx bx-images' style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h3>لا توجد إعلانات بعد</h3>
+        <p>ابدأ بإنشاء أول إعلان ليظهر للجميع</p>
+      </div>
+    <% } else { %>
+      <div class="grid">
+        <% ads.forEach(ad => { %>
+          <div class="ad-card">
+            <img src="<%= ad.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image' %>" alt="<%= ad.title %>" class="ad-image" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+            <div class="ad-body">
+              <div class="ad-title"><%= ad.title %></div>
+              <div class="ad-desc"><%= ad.description %></div>
+              <div style="margin-bottom: 1rem; font-size: 0.85rem;">
+                <a href="<%= ad.link %>" target="_blank" style="color: var(--primary); text-decoration: none;"><i class='bx bx-link-external'></i> معاينة الرابط</a>
+              </div>
+              <div class="ad-footer">
+                <button class="action-btn secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="toggleAd(<%= ad.id %>)">
+                  <% if(ad.isActive) { %> تعطيل <% } else { %> تفعيل <% } %>
+                </button>
+                <button class="action-btn danger" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="deleteAd(<%= ad.id %>)">
+                  <i class='bx bx-trash'></i>
+                </button>
+                <span class="status-badge <%= ad.isActive ? 'status-active' : 'status-inactive' %>">
+                   <%= ad.isActive ? 'نشط (يظهر)' : 'معطل (مخفي)' %>
+                </span>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="adModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-weight: 700;">إعلان جديد</h3>
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+      </div>
+      <form id="adForm" onsubmit="handleCreate(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>عنوان الإعلان</label>
+            <input type="text" name="title" class="form-control" placeholder="مثال: خصم 50% على المنصة" required>
+          </div>
+          <div class="form-group">
+            <label>الوصف / النص</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="اكتب تفاصيل الإعلان هنا..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label>رابط الصورة (URL)</label>
+            <input type="url" name="imageUrl" class="form-control" placeholder="https://..." required>
+          </div>
+          <div class="form-group">
+            <label>رابط التوجيه (Link)</label>
+            <input type="url" name="link" class="form-control" placeholder="https://..." required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="action-btn secondary" onclick="closeAddModal()">إلغاء</button>
+          <button type="submit" class="action-btn">حفظ الإعلان</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddModal() { document.getElementById('adModal').classList.add('open'); }
+    function closeAddModal() { document.getElementById('adModal').classList.remove('open'); document.getElementById('adForm').reset(); }
+
+    async function handleCreate(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        title: form.title.value,
+        description: form.description.value,
+        imageUrl: form.imageUrl.value,
+        link: form.link.value
+      };
+
+      try {
+        const res = await fetch('/api/v1/ads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if(res.ok) {
+          Swal.fire('نجاح', 'تمت إضافة الإعلان بسلام!', 'success');
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          Swal.fire('خطأ', 'فشلت الإضافة', 'error');
+        }
+      } catch (err) {
+        Swal.fire('خطأ', 'فشل الاتصال', 'error');
+      }
+    }
+
+    async function toggleAd(id) {
+      try {
+        await fetch(`/api/v1/ads/${id}/toggle`, { method: 'PATCH' });
+        location.reload();
+      } catch (e) { alert('خطأ'); }
+    }
+
+    async function deleteAd(id) {
+      if(confirm('هل أنت متأكد من الحذف؟')) {
+        try {
+          await fetch(`/api/v1/ads/${id}`, { method: 'DELETE' });
+          location.reload();
+        } catch (e) { alert('خطأ'); }
+      }
+    }
+  </script>
+</body>
+</html>

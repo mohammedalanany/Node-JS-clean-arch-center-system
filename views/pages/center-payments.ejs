@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="إدارة الموارد المالية وسجل مدفوعات الطلاب في السنتر">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #4aa3df;
+      --primary-dark: #2980b9;
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #e17055;
+      --info: #6c5ce7;
+      --bg: #f0f4f8;
+      --card-bg: #ffffff;
+      --text: #2d3436;
+      --text-muted: #636e72;
+      --border: #dfe6e9;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,.06);
+      --shadow-md: 0 8px 24px rgba(0,0,0,.10);
+      --radius: 14px;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Cairo',sans-serif; background:var(--bg); display:flex; min-height:100vh; color:var(--text); }
+
+    /* ── Wrapper ── */
+    .wrapper { flex:1; display:flex; flex-direction:column; min-width:0; }
+
+    /* ── Top Bar ── */
+    .topbar {
+      height:65px; background:linear-gradient(135deg,#2980b9,var(--primary));
+      display:flex; align-items:center; padding:0 2rem; color:#fff;
+      font-size:1.1rem; font-weight:700; gap:1rem; flex-shrink:0;
+      position:sticky; top:0; z-index:100;
+      box-shadow:0 4px 20px rgba(74,163,223,.3);
+    }
+    .topbar-right { margin-right:auto; font-size:.85rem; font-weight:500; opacity:.9; display:flex; align-items:center; gap:.5rem; }
+
+    /* ── Main ── */
+    .main { padding:2rem; flex:1; overflow-y:auto; }
+
+    /* ── Stats Grid ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1.25rem; margin-bottom:2rem; }
+    .stat-card {
+      background:var(--card-bg); border-radius:var(--radius); padding:1.4rem 1.6rem;
+      box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:1.2rem;
+      border-right:5px solid transparent; transition:transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+    .stat-card.green  { border-color:var(--success); }
+    .stat-card.yellow { border-color:var(--warning); }
+    .stat-card.red    { border-color:var(--danger); }
+    .stat-card.purple { border-color:var(--info); }
+
+    .stat-icon {
+      width:52px; height:52px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.6rem; flex-shrink:0;
+    }
+    .green  .stat-icon { background:rgba(0,184,148,.12); color:var(--success); }
+    .yellow .stat-icon { background:rgba(253,203,110,.15); color:#e0a812; }
+    .red    .stat-icon { background:rgba(225,112,85,.12);  color:var(--danger); }
+    .purple .stat-icon { background:rgba(108,92,231,.12);  color:var(--info); }
+
+    .stat-info .stat-label { font-size:.8rem; color:var(--text-muted); font-weight:600; margin-bottom:.3rem; }
+    .stat-info .stat-value { font-size:1.5rem; font-weight:800; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;
+      background:var(--card-bg); padding:1rem 1.4rem; border-radius:var(--radius);
+      box-shadow:var(--shadow-sm); flex-wrap:wrap;
+    }
+    .toolbar h2 { font-size:1.2rem; font-weight:800; margin-left:auto; }
+    .search-box {
+      display:flex; align-items:center; gap:.6rem;
+      border:2px solid var(--border); border-radius:10px; padding:.5rem 1rem;
+      background:#f8fafc; transition:border .2s; flex:1; max-width:300px;
+    }
+    .search-box:focus-within { border-color:var(--primary); }
+    .search-box input { border:none; outline:none; background:transparent; font-family:inherit; font-size:.9rem; width:100%; }
+    .search-box i { color:var(--text-muted); font-size:1.1rem; }
+
+    .filter-select {
+      border:2px solid var(--border); border-radius:10px; padding:.5rem .9rem;
+      font-family:inherit; font-size:.87rem; background:#f8fafc;
+      cursor:pointer; outline:none; transition:border .2s;
+    }
+    .filter-select:focus { border-color:var(--primary); }
+
+    .btn {
+      display:inline-flex; align-items:center; gap:.5rem; padding:.55rem 1.2rem;
+      border-radius:10px; font-family:inherit; font-weight:700; font-size:.9rem;
+      cursor:pointer; border:none; transition:all .2s; text-decoration:none;
+    }
+    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; box-shadow:0 4px 12px rgba(74,163,223,.3); }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(74,163,223,.4); }
+    .btn-success { background:linear-gradient(135deg,#00b894,#00cec9); color:#fff; box-shadow:0 4px 12px rgba(0,184,148,.3); }
+    .btn-success:hover { transform:translateY(-2px); }
+    .btn-danger { background:linear-gradient(135deg,#e17055,#d63031); color:#fff; }
+    .btn-danger:hover { transform:translateY(-2px); }
+    .btn-ghost { background:transparent; border:2px solid var(--border); color:var(--text-muted); }
+    .btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
+    .btn-sm { padding:.4rem .9rem; font-size:.82rem; border-radius:8px; }
+
+    /* ── Table Card ── */
+    .table-card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; }
+    .table-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:750px; }
+    thead { background:linear-gradient(135deg,#f8fafc,#eef2f7); }
+    thead th {
+      padding:1rem 1.2rem; text-align:right; font-size:.82rem; font-weight:800;
+      color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px;
+      white-space:nowrap; border-bottom:2px solid var(--border);
+    }
+    tbody tr { border-bottom:1px solid #f0f4f8; transition:background .15s; }
+    tbody tr:hover { background:#f8fafc; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:.9rem 1.2rem; font-size:.9rem; vertical-align:middle; }
+
+    /* ── Badges ── */
+    .badge {
+      display:inline-flex; align-items:center; gap:.3rem;
+      padding:.3rem .75rem; border-radius:20px; font-size:.78rem; font-weight:700;
+    }
+    .badge-paid    { background:rgba(0,184,148,.12);  color:#00a381; }
+    .badge-pending { background:rgba(253,203,110,.18); color:#c49a00; }
+    .badge-partial { background:rgba(108,92,231,.12);  color:#5a4dcf; }
+    .badge-refunded{ background:rgba(225,112,85,.12);  color:#c0392b; }
+
+    /* ── Amount ── */
+    .amount { font-weight:800; font-size:1rem; }
+    .amount-paid    { color:var(--success); }
+    .amount-pending { color:#e0a812; }
+    .amount-partial { color:var(--info); }
+    .amount-refunded{ color:var(--danger); }
+
+    /* ── Avatar ── */
+    .student-cell { display:flex; align-items:center; gap:.75rem; }
+    .student-avatar {
+      width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:.9rem; color:#fff; flex-shrink:0;
+    }
+    .student-name { font-weight:700; font-size:.9rem; }
+    .student-group { font-size:.75rem; color:var(--text-muted); margin-top:.1rem; }
+
+    /* ── Actions ── */
+    .actions { display:flex; gap:.5rem; align-items:center; }
+
+    /* ── Empty State ── */
+    .empty-state { padding:4rem; text-align:center; color:var(--text-muted); }
+    .empty-state i { font-size:4.5rem; opacity:.2; margin-bottom:1rem; display:block; }
+    .empty-state h3 { font-size:1.2rem; margin-bottom:.5rem; }
+
+    /* ── Pagination ── */
+    #paginationBar { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.4rem; border-top:1px solid var(--border); font-size:.85rem; color:var(--text-muted); flex-wrap:wrap; gap:.5rem; }
+    .page-btns { display:flex; gap:.4rem; }
+    .page-btns button { width:34px; height:34px; border-radius:8px; border:2px solid var(--border); background:transparent; font-family:inherit; font-size:.85rem; cursor:pointer; font-weight:700; color:var(--text); transition:.2s; }
+    .page-btns button:hover, .page-btns button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+    /* ══════════════════ MODAL ══════════════════ */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:500;
+      display:none; align-items:center; justify-content:center;
+      backdrop-filter:blur(4px);
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:var(--card-bg); border-radius:20px; width:100%; max-width:540px;
+      box-shadow:0 24px 64px rgba(0,0,0,.2); animation:modalIn .25s ease;
+      max-height:90vh; overflow-y:auto;
+    }
+    @keyframes modalIn { from { opacity:0; transform:translateY(-24px) scale(.97); } to { opacity:1; transform:none; } }
+    .modal-header {
+      padding:1.5rem 1.8rem 1rem; display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--card-bg); z-index:1;
+    }
+    .modal-header h3 { font-size:1.2rem; font-weight:800; }
+    .modal-close { background:none; border:none; font-size:1.6rem; cursor:pointer; color:var(--text-muted); line-height:1; padding:.2rem; }
+    .modal-close:hover { color:var(--danger); }
+    .modal-body { padding:1.5rem 1.8rem; }
+    .modal-footer { padding:1rem 1.8rem 1.5rem; display:flex; justify-content:flex-end; gap:.75rem; border-top:1px solid var(--border); }
+
+    /* Form */
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .form-group { display:flex; flex-direction:column; gap:.45rem; }
+    .form-group.full { grid-column:1/-1; }
+    label { font-size:.83rem; font-weight:700; color:var(--text-muted); }
+    .form-control {
+      border:2px solid var(--border); border-radius:10px; padding:.65rem 1rem;
+      font-family:inherit; font-size:.9rem; outline:none; transition:border .2s; background:#fafbfc;
+    }
+    .form-control:focus { border-color:var(--primary); background:#fff; }
+    textarea.form-control { resize:vertical; min-height:70px; }
+
+    /* Toast */
+    #toast-container { position:fixed; bottom:1.5rem; left:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:.5rem; }
+    .toast {
+      display:flex; align-items:center; gap:.75rem; padding:.9rem 1.4rem;
+      border-radius:12px; background:#2d3436; color:#fff; font-size:.88rem; font-weight:600;
+      box-shadow:0 8px 24px rgba(0,0,0,.2); animation:toastIn .3s ease; min-width:260px;
+    }
+    @keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    .toast.success i { color:var(--success); }
+    .toast.error   i { color:var(--danger); }
+
+    /* Confirm dialog */
+    .confirm-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:600;
+      display:none; align-items:center; justify-content:center;
+    }
+    .confirm-overlay.open { display:flex; }
+    .confirm-box {
+      background:#fff; border-radius:16px; padding:2rem; text-align:center;
+      max-width:380px; width:90%; box-shadow:0 16px 48px rgba(0,0,0,.2);
+      animation:modalIn .25s;
+    }
+    .confirm-box i { font-size:3rem; color:var(--danger); margin-bottom:1rem; display:block; }
+    .confirm-box h3 { font-size:1.1rem; margin-bottom:.5rem; }
+    .confirm-box p  { font-size:.88rem; color:var(--text-muted); margin-bottom:1.5rem; }
+    .confirm-btns { display:flex; gap:.75rem; justify-content:center; }
+
+    @media(max-width:640px) {
+      .main { padding:1rem; }
+      .form-grid { grid-template-columns:1fr; }
+      .stats-grid { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'payments' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <i class='bx bx-credit-card-front' style="font-size:1.4rem;"></i>
+      <span>إدارة الموارد المالية</span>
+      <div class="topbar-right">
+        <i class='bx bx-user'></i> <%= user ? user.firstName + ' ' + user.lastName : 'مدير السنتر' %>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-icon"><i class='bx bx-check-circle'></i></div>
+          <div class="stat-info">
+            <div class="stat-label">إجمالي المحصّل</div>
+            <div class="stat-value" id="statCollected"><%= summary.totalCollected.toFixed(0) %> ج</div>
+          </div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon"><i class='bx bx-time-five'></i></div>
+          <div class="stat-info">
+            <div class="stat-label">مستحقات معلقة</div>
+            <div class="stat-value" id="statPending"><%= (summary.totalPending + summary.totalPartial).toFixed(0) %> ج</div>
+          </div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon"><i class='bx bx-receipt'></i></div>
+          <div class="stat-info">
+            <div class="stat-label">إجمالي الإيصالات</div>
+            <div class="stat-value" id="statCount"><%= payments.length %></div>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon"><i class='bx bx-error-circle'></i></div>
+          <div class="stat-info">
+            <div class="stat-label">طلاب متأخرون</div>
+            <div class="stat-value" id="statLate"><%= summary.countPending %></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <h2><i class='bx bx-list-ul' style="color:var(--primary);"></i> سجل المدفوعات</h2>
+        <div class="search-box">
+          <i class='bx bx-search'></i>
+          <input id="searchInput" type="text" placeholder="ابحث بالاسم أو المجموعة..." oninput="filterTable()">
+        </div>
+        <select id="statusFilter" class="filter-select" onchange="filterTable()">
+          <option value="">كل الحالات</option>
+          <option value="paid">مدفوع</option>
+          <option value="pending">معلق</option>
+          <option value="partial">جزئي</option>
+          <option value="refunded">مسترجع</option>
+        </select>
+        <button class="btn btn-ghost" onclick="openBulkModal()" style="margin-left: 0.5rem;">
+          <i class='bx bx-layer'></i> تكريك شهري
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <i class='bx bx-plus'></i> إضافة دفعة
+        </button>
+      </div>
+
+      <!-- Breakdown Chart -->
+      <div class="table-card" style="margin-bottom: 2rem; padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem; font-size: 1rem; font-weight: 800;"><i class='bx bx-bar-chart-alt-2' style="color:var(--primary);"></i> التحليل المالي (آخر 6 أشهر)</h3>
+        <div style="height: 220px; width: 100%;">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-scroll">
+          <table id="paymentsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الطالب</th>
+                <th>المجموعة</th>
+                <th>المبلغ</th>
+                <th>الحالة</th>
+                <th>تاريخ الاستحقاق</th>
+                <th>تاريخ الدفع</th>
+                <th>ملاحظات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <% if (payments.length === 0) { %>
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <i class='bx bx-wallet'></i>
+                    <h3>لا توجد مدفوعات بعد</h3>
+                    <p>اضغط "إضافة دفعة" لتسجيل أول معاملة مالية.</p>
+                  </div>
+                </td>
+              </tr>
+              <% } else { %>
+              <% payments.forEach((p, i) => { %>
+              <tr data-status="<%= p.status %>" data-student="<%= (p.student?.firstName || '') + ' ' + (p.student?.lastName || '') %>" data-group="<%= p.group?.name || '' %>">
+                <td style="color:var(--text-muted);font-weight:700;"><%= i + 1 %></td>
+                <td>
+                  <div class="student-cell">
+                    <div class="student-avatar" style="background:<%= ['#6c5ce7','#00b894','#e17055','#fdcb6e','#0984e3'][i%5] %>;">
+                      <%= (p.student?.firstName || '?')[0] %>
+                    </div>
+                    <div>
+                      <div class="student-name"><%= p.student ? p.student.firstName + ' ' + p.student.lastName : 'غير محدد' %></div>
+                    </div>
+                  </div>
+                </td>
+                <td style="color:var(--text-muted);font-size:.85rem;"><%= p.group ? p.group.name : '—' %></td>
+                <td>
+                  <span class="amount amount-<%= p.status %>"><%= Number(p.amount).toLocaleString('ar-EG') %> ج</span>
+                </td>
+                <td>
+                  <% if (p.status === 'paid') { %>
+                    <span class="badge badge-paid"><i class='bx bx-check-circle'></i> مدفوع</span>
+                  <% } else if (p.status === 'pending') { %>
+                    <span class="badge badge-pending"><i class='bx bx-time'></i> معلق</span>
+                  <% } else if (p.status === 'partial') { %>
+                    <span class="badge badge-partial"><i class='bx bx-minus-circle'></i> جزئي</span>
+                  <% } else { %>
+                    <span class="badge badge-refunded"><i class='bx bx-undo'></i> مسترجع</span>
+                  <% } %>
+                </td>
+                <td style="font-size:.85rem;white-space:nowrap;"><%= new Date(p.dueDate).toLocaleDateString('ar-EG') %></td>
+                <td style="font-size:.85rem;white-space:nowrap;">
+                  <%= p.paidAt ? new Date(p.paidAt).toLocaleDateString('ar-EG') : '—' %>
+                </td>
+                <td style="font-size:.82rem;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= p.notes || '' %>">
+                  <%= p.notes || '—' %>
+                </td>
+                <td>
+                  <div class="actions">
+                    <% if (p.status !== 'paid') { %>
+                    <button class="btn btn-success btn-sm" title="تحصيل الدفع" onclick="markPaid(<%= p.id %>)">
+                      <i class='bx bx-check'></i>
+                    </button>
+                    <% } %>
+                    <button class="btn btn-ghost btn-sm" title="تعديل" onclick='openEditModal(<%= JSON.stringify({id:p.id,studentId:p.studentId,groupId:p.groupId,amount:p.amount,status:p.status,dueDate:p.dueDate,paidAt:p.paidAt,notes:p.notes}) %>)'>
+                      <i class='bx bx-edit'></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" title="حذف" onclick="confirmDelete(<%= p.id %>)">
+                      <i class='bx bx-trash'></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <% if (payments.length > 0) { %>
+        <div id="paginationBar">
+          <span id="paginationInfo"></span>
+          <div class="page-btns" id="pageButtons"></div>
+        </div>
+        <% } %>
+      </div>
+
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <%- include('../partials/center-ads') %>
+
+  <!-- ══ ADD / EDIT MODAL ══ -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">إضافة دفعة جديدة</h3>
+        <button class="modal-close" onclick="closeModal()" aria-label="إغلاق">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="paymentForm" onsubmit="submitForm(event)">
+          <input type="hidden" id="paymentId">
+          <div class="form-grid">
+
+            <div class="form-group full">
+              <label for="selectGroup">المجموعة (اختياري)</label>
+              <select id="selectGroup" class="form-control" onchange="updateStudentList()">
+                <option value="">— الكُل (بدون فلترة) —</option>
+                <% groups.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="form-group full">
+              <label for="selectStudent">الطالب *</label>
+              <select id="selectStudent" class="form-control" required>
+                <option value="">— اختر الطالب —</option>
+                <% students.forEach(s => { %>
+                <option value="<%= s.id %>"><%= s.firstName %> <%= s.lastName %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="inputAmount">المبلغ الإجمالي *</label>
+              <input type="number" id="inputAmount" class="form-control" placeholder="0.00" min="0" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+              <label for="inputPaidAmount">المبلغ المدفوع</label>
+              <input type="number" id="inputPaidAmount" class="form-control" placeholder="0.00" min="0" step="0.01">
+            </div>
+
+            <div class="form-group">
+              <label for="selectStatus">الحالة *</label>
+              <select id="selectStatus" class="form-control" required>
+                <option value="pending">معلق</option>
+                <option value="paid">مدفوع</option>
+                <option value="partial">جزئي</option>
+                <option value="refunded">مسترجع</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="selectMethod">وسيلة الدفع</label>
+              <select id="selectMethod" class="form-control">
+                <option value="cash">نقدي</option>
+                <option value="bank">تحويل بنكي</option>
+                <option value="wallet">محفظة إلكترونية</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="inputDueDate">تاريخ الاستحقاق *</label>
+              <input type="date" id="inputDueDate" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label for="inputPaidAt">تاريخ الدفع الفعلي</label>
+              <input type="date" id="inputPaidAt" class="form-control">
+            </div>
+
+            <div class="form-group full" style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+              <div>
+                <label for="selectMonth">عن شهر</label>
+                <select id="selectMonth" class="form-control" onchange="updateDescription()">
+                  <option value="">— اختر —</option>
+                  <% ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'].forEach(m => { %>
+                  <option value="<%= m %>"><%= m %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label for="inputDescription">البند / السبب</label>
+                <input type="text" id="inputDescription" class="form-control" placeholder="مثال: اشتراك شهر ابريل">
+              </div>
+            </div>
+
+            <div class="form-group full">
+              <label for="inputNotes">ملاحظات إدارية</label>
+              <textarea id="inputNotes" class="form-control" placeholder="أي ملاحظات إضافية..."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitForm(event)">
+          <i class='bx bx-save'></i> <span id="submitBtnText">حفظ الدفعة</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CONFIRM DELETE ══ -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <i class='bx bx-error-alt'></i>
+      <h3>تأكيد الحذف</h3>
+      <p>هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.</p>
+      <div class="confirm-btns">
+        <button class="btn btn-ghost" onclick="closeConfirm()">إلغاء</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn"><i class='bx bx-trash'></i> حذف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOAST ══ -->
+  <div id="toast-container"></div>
+
+<script>
+  // ── Data ─────────────────────────────────────────────────────────────────────
+  let allRows = [];
+  let currentPage = 1;
+  const PAGE_SIZE = 12;
+  let deleteTargetId = null;
+
+  const allStudentsData = <%- JSON.stringify(students.map(s => ({ id: s.id, name: s.firstName + ' ' + s.lastName }))) %>;
+  const groupsData = <%- JSON.stringify(groups.map(g => ({ id: g.id, students: (g.students || []).map(s => ({ id: s.id, name: s.firstName + ' ' + s.lastName })) }))) %>;
+
+  // ── Form Logic ───────────────────────────────────────────────────────────────
+  function updateStudentList() {
+    const groupId = document.getElementById('selectGroup').value;
+    const studentSelect = document.getElementById('selectStudent');
+    
+    // Save current selection if possible
+    const currentVal = studentSelect.value;
+    studentSelect.innerHTML = '<option value="">— اختر الطالب —</option>';
+    
+    let studentsToShow = allStudentsData;
+    if (groupId) {
+      studentSelect.innerHTML += '<option value="all" style="color:var(--primary); font-weight:bold;">✅ إضافة دفعة مستحقة لجميع طلاب المجموعة مرة واحدة</option>';
+      const g = groupsData.find(x => x.id == groupId);
+      if (g) studentsToShow = g.students;
+    }
+    
+    studentsToShow.forEach(s => {
+      const selected = (s.id == currentVal) ? 'selected' : '';
+      studentSelect.innerHTML += `<option value="${s.id}" ${selected}>${s.name}</option>`;
+    });
+  }
+
+  function updateDescription() {
+    const m = document.getElementById('selectMonth').value;
+    if (m) {
+      document.getElementById('inputDescription').value = `اشتراك شهر ${m}`;
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    allRows = Array.from(document.querySelectorAll('#tableBody tr[data-status]'));
+    renderPage(1);
+    updateStudentList(); // Initialize the list
+  });
+
+  // ── Filter ────────────────────────────────────────────────────────────────────
+  function filterTable() {
+    const q     = document.getElementById('searchInput').value.trim().toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+
+    allRows = Array.from(document.querySelectorAll('#tableBody tr[data-status]'));
+    const visible = allRows.filter(row => {
+      const name  = (row.dataset.student || '').toLowerCase();
+      const group = (row.dataset.group  || '').toLowerCase();
+      const s     = row.dataset.status || '';
+      const matchQ = !q || name.includes(q) || group.includes(q);
+      const matchS = !status || s === status;
+      return matchQ && matchS;
+    });
+
+    allRows.forEach(r => r.style.display = 'none');
+    if (visible.length === 0) {
+      showEmptySearch();
+    } else {
+      removeEmptySearch();
+      visible.forEach(r => r.style.display = '');
+    }
+    renderPage(1, visible);
+  }
+
+  function showEmptySearch() {
+    removeEmptySearch();
+    const row = document.createElement('tr');
+    row.id = 'emptySearch';
+    row.innerHTML = `<td colspan="9"><div class="empty-state"><i class='bx bx-search-alt'></i><h3>لا توجد نتائج</h3><p>جرب كلمة بحث مختلفة أو تغيير الفلتر.</p></div></td>`;
+    document.getElementById('tableBody').appendChild(row);
+  }
+  function removeEmptySearch() {
+    const old = document.getElementById('emptySearch');
+    if (old) old.remove();
+  }
+
+  // ── Pagination ────────────────────────────────────────────────────────────────
+  function renderPage(page, rows) {
+    const bar = document.getElementById('paginationBar');
+    if (!bar) return;
+    rows = rows || Array.from(document.querySelectorAll('#tableBody tr[data-status]'));
+    const visible = rows.filter(r => r.style.display !== 'none' || !r.dataset.status);
+    const visibleAll = Array.from(document.querySelectorAll('#tableBody tr[data-status]'));
+
+    const total = Math.ceil(visibleAll.length / PAGE_SIZE);
+    currentPage = Math.max(1, Math.min(page, total || 1));
+
+    visibleAll.forEach((r, i) => {
+      const pageIndex = Math.floor(i / PAGE_SIZE) + 1;
+      r.style.display = pageIndex === currentPage ? '' : 'none';
+    });
+
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end   = Math.min(currentPage * PAGE_SIZE, visibleAll.length);
+    document.getElementById('paginationInfo').textContent =
+      visibleAll.length > 0 ? `عرض ${start}–${end} من ${visibleAll.length}` : '';
+
+    const btnContainer = document.getElementById('pageButtons');
+    btnContainer.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      if (i === currentPage) btn.classList.add('active');
+      btn.onclick = () => renderPage(i);
+      btnContainer.appendChild(btn);
+    }
+  }
+
+  // ── Modal: Add ───────────────────────────────────────────────────────────────
+  function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'إضافة دفعة جديدة';
+    document.getElementById('submitBtnText').textContent = 'حفظ الدفعة';
+    document.getElementById('paymentId').value = '';
+    document.getElementById('paymentForm').reset();
+    updateStudentList();
+    document.getElementById('inputDueDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('paymentModal').classList.add('open');
+  }
+
+  // ── Modal: Edit ──────────────────────────────────────────────────────────────
+  function openEditModal(p) {
+    document.getElementById('modalTitle').textContent = 'تعديل سجل الدفع';
+    document.getElementById('submitBtnText').textContent = 'حفظ التعديلات';
+    document.getElementById('paymentId').value = p.id;
+    document.getElementById('selectGroup').value   = p.groupId  || '';
+    updateStudentList();
+    document.getElementById('selectStudent').value = p.studentId || '';
+    document.getElementById('inputAmount').value   = p.amount;
+    document.getElementById('inputPaidAmount').value = p.paidAmount || 0;
+    document.getElementById('selectStatus').value  = p.status;
+    document.getElementById('selectMethod').value  = p.paymentMethod || 'cash';
+    document.getElementById('inputDueDate').value  = p.dueDate ? p.dueDate.split('T')[0] : '';
+    document.getElementById('inputPaidAt').value   = p.paidAt  ? p.paidAt.split('T')[0]  : '';
+    document.getElementById('inputDescription').value = p.description || '';
+    document.getElementById('inputNotes').value    = p.notes   || '';
+    document.getElementById('paymentModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('paymentModal').classList.remove('open');
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────────
+  async function submitForm(e) {
+    e.preventDefault();
+    const id = document.getElementById('paymentId').value;
+    const studentIdSelect = document.getElementById('selectStudent').value;
+    const groupIdSelect = document.getElementById('selectGroup').value;
+    
+    let url, method, body;
+    
+    if (studentIdSelect === 'all') {
+      url = '/api/v1/payments/bulk-group';
+      method = 'POST';
+      body = {
+        groupId:     groupIdSelect,
+        amount:      document.getElementById('inputAmount').value,
+        dueDate:     document.getElementById('inputDueDate').value,
+        description: document.getElementById('inputDescription').value || undefined
+      };
+    } else {
+      url    = id ? `/api/v1/payments/${id}` : '/api/v1/payments';
+      method = id ? 'PUT' : 'POST';
+      body = {
+        studentId:     studentIdSelect,
+        groupId:       groupIdSelect || undefined,
+        amount:        document.getElementById('inputAmount').value,
+        paidAmount:    document.getElementById('inputPaidAmount').value,
+        status:        document.getElementById('selectStatus').value,
+        paymentMethod: document.getElementById('selectMethod').value,
+        dueDate:       document.getElementById('inputDueDate').value,
+        paidAt:        document.getElementById('inputPaidAt').value   || undefined,
+        description:   document.getElementById('inputDescription').value || undefined,
+        notes:         document.getElementById('inputNotes').value    || undefined,
+      };
+    }
+
+    try {
+      const res  = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'خطأ في الحفظ');
+      showToast(data.message || 'تم حفظ السجل بنجاح ✓', 'success');
+      closeModal();
+      setTimeout(() => location.reload(), 1000);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Mark Paid ─────────────────────────────────────────────────────────────────
+  async function markPaid(id) {
+    try {
+      const res  = await fetch(`/api/v1/payments/${id}/pay`, { method: 'PATCH' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'خطأ');
+      showToast('تم تحصيل الدفعة بنجاح ✓', 'success');
+      setTimeout(() => location.reload(), 700);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────────
+  function confirmDelete(id) {
+    deleteTargetId = id;
+    document.getElementById('confirmOverlay').classList.add('open');
+    document.getElementById('confirmDeleteBtn').onclick = doDelete;
+  }
+  function closeConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('open');
+    deleteTargetId = null;
+  }
+  async function doDelete() {
+    try {
+      const res  = await fetch(`/api/v1/payments/${deleteTargetId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'خطأ في الحذف');
+      showToast('تم حذف السجل بنجاح', 'success');
+      closeConfirm();
+      setTimeout(() => location.reload(), 700);
+    } catch (err) { showToast(err.message, 'error'); closeConfirm(); }
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const icon = type === 'success' ? 'bx-check-circle' : 'bx-error-circle';
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<i class='bx ${icon}' style="font-size:1.3rem;"></i><span>${msg}</span>`;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+
+  // Close modal on overlay click
+  document.getElementById('paymentModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+  });
+  // Close on Escape
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeConfirm(); closeBulkModal(); } });
+
+  // ── Bulk Modal ──────────────────────────────────────────────────────────────
+  function openBulkModal() {
+    document.getElementById('bulkForm').reset();
+    document.getElementById('bulkDueDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('bulkModal').classList.add('open');
+  }
+  function closeBulkModal() { document.getElementById('bulkModal').classList.remove('open'); }
+
+  async function submitBulk(e) {
+    e.preventDefault();
+    const body = {
+      groupId:     document.getElementById('bulkGroup').value,
+      amount:      document.getElementById('bulkAmount').value,
+      dueDate:     document.getElementById('bulkDueDate').value,
+      description: document.getElementById('bulkDesc').value || undefined
+    };
+    try {
+      const res = await fetch('/api/v1/payments/bulk-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'خطأ في العملية');
+      showToast(data.message, 'success');
+      closeBulkModal();
+      setTimeout(() => location.reload(), 1000);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  // ── Chart ────────────────────────────────────────────────────────────────────
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const breakdownData = <%- JSON.stringify(monthlyBreakdown) %>;
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: breakdownData.map(d => d.month),
+      datasets: [
+        {
+          label: 'تم تحصيله',
+          data: breakdownData.map(d => d.collected),
+          backgroundColor: '#4aa3df',
+          borderRadius: 6,
+        },
+        {
+          label: 'منتظر',
+          data: breakdownData.map(d => d.pending),
+          backgroundColor: '#f1f2f6',
+          borderRadius: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, grid: { display: false } },
+        x: { grid: { display: false } }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

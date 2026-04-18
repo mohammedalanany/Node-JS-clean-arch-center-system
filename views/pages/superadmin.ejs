@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #ec4899;
+      --bg-dark: #0f172a;
+      --bg-panel: rgba(30, 41, 59, 0.7);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 100% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 280px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--bg-panel);
+      border-left: 1px solid var(--glass-border);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(to left, #818cf8, #e879f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 3rem;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 1rem 1.25rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .nav-item i { font-size: 1.25rem; }
+    
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      transform: translateX(-5px);
+    }
+    
+    .nav-item.active {
+      background: linear-gradient(270deg, rgba(79, 70, 229, 0.2) 0%, transparent 100%);
+      border-right: 4px solid var(--primary);
+    }
+
+    .logout-btn {
+      margin-top: auto;
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+    }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.2); transform: none; }
+
+    .main-content {
+      flex: 1;
+      padding: 2.5rem 4rem;
+      overflow-y: auto;
+    }
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: white;
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+      vertical-align: middle;
+      margin-right: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; width: 100%; height: 100%;
+      background: linear-gradient(-45deg, transparent, rgba(255,255,255,0.03), transparent);
+      transform: translateX(100%);
+      transition: 0.6s;
+    }
+
+    .card:hover::before { transform: translateX(-100%); }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: rgba(79, 70, 229, 0.2);
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+
+    .action-btn {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.3s ease;
+      border: none;
+      cursor: pointer;
+      font-family: 'Cairo', sans-serif;
+    }
+    .action-btn:hover { background: var(--primary-hover); }
+
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class='bx bx-cube-alt'></i> نظام السنتر
+    </div>
+    
+    <nav class="nav-links">
+      <a href="#" class="nav-item active">
+        <i class='bx bx-grid-alt'></i> لوحة القيادة
+      </a>
+      <a href="/centers" class="nav-item">
+        <i class='bx bx-buildings'></i> إدارة السناتر
+      </a>
+      <a href="#" class="nav-item">
+        <i class='bx bx-user-circle'></i> المديرين
+      </a>
+      <a href="#" class="nav-item">
+        <i class='bx bx-cog'></i> الإعدادات
+      </a>
+      <a href="/superadmin/ads" class="nav-item">
+        <i class='bx bx-megaphone'></i> إدارة الإعلانات
+      </a>
+      
+      <form action="/logout" method="POST" style="margin-top: auto;">
+        <button type="submit" class="nav-item logout-btn" style="width: 100%; text-align: right; background: rgba(239, 68, 68, 0.1); border: none; cursor: pointer; font-family: 'Cairo', sans-serif;">
+          <i class='bx bx-log-out'></i> تسجيل الخروج
+        </button>
+      </form>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-header">
+      <div>
+        <h1>مرحباً، <%= user.firstName %>! <span class="badge">المدير العام</span></h1>
+        <p class="subtitle">لوحة التحكم الرئيسية لإدارة النظام</p>
+      </div>
+      
+      <div style="background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 99px; display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--glass-border);">
+        <div style="width: 10px; height: 10px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e;"></div>
+        <span style="font-size: 0.875rem; font-weight: 600;">النظام يعمل</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Create Center Card -->
+      <div class="card">
+        <div class="card-icon" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">
+          <i class='bx bx-bxs-building-house'></i>
+        </div>
+        <h3>إنشاء سنتر جديد</h3>
+        <p>تسجيل كيان تعليمي جديد بالكامل لفصل بيانات الطلاب، المعلمين، والمدفوعات إلى قاعدة بيانات خاصة به.</p>
+        <a href="/centers/new" class="action-btn" style="background: var(--accent); text-align: center;">+ إضافة سنتر</a>
+      </div>
+
+      <!-- Global Metrics Card -->
+      <div class="card">
+        <div class="card-icon">
+          <i class='bx bx-bar-chart-alt-2'></i>
+        </div>
+        <h3>إحصائيات النظام</h3>
+        <p>عرض إجمالي الاستخدام والمقاييس عبر جميع مراكز التعليم المسجلة، بما في ذلك أعداد الطلاب وإجمالي الإيرادات.</p>
+        <button class="action-btn">عرض التقارير</button>
+      </div>
+
+      <!-- Master Users Card -->
+      <div class="card">
+        <div class="card-icon" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">
+          <i class='bx bx-group'></i>
+        </div>
+        <h3>إدارة المديرين</h3>
+        <p>التحكم في حسابات الإدارة الأساسية المسؤولة عن إدارة الفروع والمراكز التعليمية في النظام.</p>
+        <button class="action-btn" style="background: #10b981;">إدارة الصلاحيات</button>
+      </div>
+    </div>
+  
+  <%- include('../partials/footer') %>
+    </main>
+
+  <%- include('../partials/center-ads') %>
+
+</body>
+</html>

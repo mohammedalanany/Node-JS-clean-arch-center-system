@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --sidebar-bg: #333333;
+      --topbar-bg: #4aa3df;
+      --bg-body: #e5e5e5;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-body);
+      display: flex;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* Layout Wrapper */
+    .wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Blue Bar */
+    .topbar {
+      height: 60px;
+      background: var(--topbar-bg);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      color: white;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+    
+    .dashboard-layout {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* Stats Container */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 992px) { .stats-container { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .stats-container { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      border-right: 4px solid var(--topbar-bg);
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); }
+
+    .stat-icon {
+      width: 55px;
+      height: 55px;
+      border-radius: 12px;
+      background: rgba(74, 163, 223, 0.1);
+      color: var(--topbar-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .stat-info h3 { font-size: 1.6rem; font-weight: 800; color: #333; line-height: 1.1; margin-bottom: 0.2rem; }
+    .stat-info p { color: #888; font-size: 0.85rem; font-weight: 600; }
+
+    /* The White Container for the Grid */
+    .grid-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) { .tiles-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .tiles-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .tiles-grid { grid-template-columns: 1fr; } }
+
+    /* The Colorful Tiles */
+    .dash-tile {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: white;
+      height: 140px;
+      border-radius: 2px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .dash-tile:hover { transform: translateY(-4px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+    
+    .tile-top { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .tile-icon-circle { width: 50px; height: 50px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+    .tile-bottom { height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; background: rgba(0, 0, 0, 0.15); }
+
+    /* Vibrant Solid Colors */
+    .bg-green { background-color: #5cb85c; }
+    .bg-blue { background-color: #5bc0de; }
+    .bg-yellow { background-color: #f0ad4e; }
+    .bg-purple { background-color: #ae75b7; }
+    .bg-teal { background-color: #409b9f; }
+    .bg-red { background-color: #ba5f61; }
+    .bg-blue-dark { background-color: #6377b2; }
+    .bg-pink { background-color: #ed84a3; }
+    .bg-brown { background-color: #ac826b; }
+    .bg-orange { background-color: #e5915d; }
+
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <%- include('../partials/center-sidebar', { active: 'dashboard' }) %>
+
+  <!-- Main Content Wrapper -->
+  <div class="wrapper">
+    
+    <!-- Top Bar -->
+    <header class="topbar">
+      <span><%= typeof centerName !== 'undefined' ? centerName : 'أكاديمي برو' %> </span>
+    </header>
+
+    <!-- Content -->
+    <div class="content-flex-wrapper" style="display: flex; flex: 1; min-height: 0;">
+    <main class="main-content" style="flex: 1;">
+      <div class="dashboard-layout">
+        
+        <!-- Center Stats Container -->
+        <div class="stats-container">
+          <div class="stat-card" style="border-right-color: #5cb85c;">
+            <div class="stat-icon" style="background: rgba(92, 184, 92, 0.1); color: #5cb85c;"><i class='bx bx-group'></i></div>
+            <div class="stat-info">
+              <h3><%= stats.totalStudents %></h3>
+              <p>مجموع الطلاب</p>
+            </div>
+          </div>
+
+          <div class="stat-card" style="border-right-color: #5bc0de;">
+            <div class="stat-icon" style="background: rgba(91, 192, 222, 0.1); color: #5bc0de;"><i class='bx bx-collection'></i></div>
+            <div class="stat-info">
+              <h3><%= stats.totalGroups %></h3>
+              <p>مجموعة نشطة</p>
+            </div>
+          </div>
+
+          <div class="stat-card" style="border-right-color: #f0ad4e;">
+            <div class="stat-icon" style="background: rgba(240, 173, 78, 0.1); color: #f0ad4e;"><i class='bx bx-wallet'></i></div>
+            <div class="stat-info">
+              <h3><%= stats.monthlyRevenue.toLocaleString('ar-EG') %> ج</h3>
+              <p>إيرادات الشهر</p>
+            </div>
+          </div>
+
+          <div class="stat-card" style="border-right-color: #ae75b7;">
+            <div class="stat-icon" style="background: rgba(174, 117, 183, 0.1); color: #ae75b7;"><i class='bx bx-store-alt'></i></div>
+            <div class="stat-info">
+              <h3>4</h3>
+              <p>قاعات دراسية</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-container">
+          <div class="tiles-grid">
+            
+            <a href="/center/students" class="dash-tile bg-green">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-book'></i></div>
+              </div>
+              <div class="tile-bottom">الطلاب</div>
+            </a>
+
+            <a href="/center/attendance" class="dash-tile bg-blue">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-check-shield'></i></div>
+              </div>
+              <div class="tile-bottom">سجل الحضور</div>
+            </a>
+
+            <a href="/center/notifications" class="dash-tile bg-yellow">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-envelope'></i></div>
+              </div>
+              <div class="tile-bottom">الرسائل والإشعارات</div>
+            </a>
+
+            <a href="/center/schedule" class="dash-tile bg-purple">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-calendar'></i></div>
+              </div>
+              <div class="tile-bottom">تخطيط الجدول</div>
+            </a>
+
+            <a href="/center/exams" class="dash-tile bg-teal">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-check-circle'></i></div>
+              </div>
+              <div class="tile-bottom">التقييمات والاختبارات</div>
+            </a>
+
+            <a href="#" class="dash-tile bg-red">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-megaphone'></i></div>
+              </div>
+              <div class="tile-bottom">الإعلانات</div>
+            </a>
+
+            <a href="/center/attendance" class="dash-tile bg-purple">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-message-dots'></i></div>
+              </div>
+              <div class="tile-bottom">الحضور للطلاب</div>
+            </a>
+
+            <a href="/center/groups" class="dash-tile bg-blue-dark">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-collection'></i></div>
+              </div>
+              <div class="tile-bottom">المجموعات الدراسية</div>
+            </a>
+
+            <a href="#" class="dash-tile bg-pink">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-target-lock'></i></div>
+              </div>
+              <div class="tile-bottom">أهداف وتطوير</div>
+            </a>
+
+            <a href="/center/payments" class="dash-tile bg-teal">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-list-ul'></i></div>
+              </div>
+              <div class="tile-bottom">سجل المدفوعات</div>
+            </a>
+
+            <a href="#" class="dash-tile bg-brown">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-briefcase'></i></div>
+              </div>
+              <div class="tile-bottom">الموارد التعليمية</div>
+            </a>
+
+            <a href="#" class="dash-tile bg-teal" style="background-color: #438e7b;">
+              <div class="tile-top">
+                <div class="tile-icon-circle"><i class='bx bx-bar-chart-alt-2'></i></div>
+              </div>
+              <div class="tile-bottom">التقارير المالية</div>
+            </a>
+
+          </div>
+        </div>
+
+      </div>
+    
+  <%- include('../partials/footer') %>
+    </main>
+    <%- include('../partials/center-ads') %>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    :root {
+      --sidebar-bg: #333333;
+      --topbar-bg: #4aa3df;
+      --bg-body: #f4f7f6;
+      --accent: #5cb85c;
+      --warning: #f0ad4e;
+      --danger: #d9534f;
+      --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); color: #333; display: flex; min-height: 100vh; }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; justify-content: space-between; font-weight: bold; flex-shrink: 0; }
+    .main-content { padding: 2rem; overflow-y: auto; }
+
+    /* Hub Tabs */
+    .hub-tabs { display: flex; gap: 1rem; background: white; padding: 1rem 2rem; border-bottom: 2px solid #eee; margin-bottom: 2rem; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+    .tab-item { padding: 10px 25px; border-radius: 30px; font-weight: 700; color: #777; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; border: 1px solid transparent; }
+    .tab-item:hover { background: #f0f2f5; }
+    .tab-item.active { background: var(--sidebar-active-bg, rgba(74, 163, 223, 0.1)); color: var(--topbar-bg); border-color: var(--topbar-bg); }
+    .tab-item i { font-size: 1.3rem; }
+
+    .hub-content { display: none; }
+    .hub-content.active { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Shared Components */
+    .control-card { background: white; padding: 1.5rem; border-radius: 15px; box-shadow: var(--card-shadow); margin-bottom: 2rem; display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+    .form-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-weight: 700; font-size: 0.85rem; color: #666; }
+    .form-group select, .form-group input { padding: 10px; border: 2px solid #eee; border-radius: 10px; font-family: inherit; font-size: 1rem; outline: none; }
+    .btn-action { background: var(--topbar-bg); color: white; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; height: 48px; }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+
+    /* --- Traditional Tab Styles --- */
+    .attendance-table-card { background: white; border-radius: 15px; box-shadow: var(--card-shadow); overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: #fafafa; padding: 15px 20px; text-align: right; font-size: 0.85rem; color: #888; border-bottom: 1px solid #eee; }
+    .data-table td { padding: 15px 20px; border-bottom: 1px solid #f9f9f9; }
+    
+    .status-pill { background: #f0f2f5; padding: 5px 15px; border-radius: 30px; border: none; font-family: inherit; font-weight: 700; cursor: pointer; font-size: 0.8rem; margin: 2px; transition: 0.2s; color: #777; }
+    .status-pill.present.active { background: #e8f5e9; color: #2e7d32; }
+    .status-pill.absent.active { background: #ffebee; color: #c62828; }
+    .status-pill.late.active { background: #fff3e0; color: #ef6c00; }
+
+    /* --- QR Tab Styles --- */
+    .qr-grid { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; }
+    .scanner-panel { background: #222; border-radius: 20px; overflow: hidden; position: relative; min-height: 450px; display: flex; align-items: center; justify-content: center; box-shadow: var(--card-shadow); }
+    #reader { width: 100%; height: 100%; }
+    .scanner-overlay { position: absolute; width: 250px; height: 250px; border: 4px solid var(--topbar-bg); border-radius: 20px; pointer-events: none; z-index: 10; }
+    
+    .feedback-panel { background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--card-shadow); text-align: center; }
+    .scanned-avatar { width: 120px; height: 120px; border-radius: 50%; background: #f0f2f5; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #ccc; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .scanned-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+
+    /* --- Reports Tab Styles --- */
+    .reports-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .report-stat-card { background: white; padding: 1.5rem; border-radius: 15px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 1rem; }
+    .stat-ico { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'attendance' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <span>نظام إدارة الحضور والغياب / Unified Attendance Hub</span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-check-shield'></i> سجلات المركز</div>
+    </header>
+
+    <div class="hub-tabs">
+      <div class="tab-item active" onclick="switchTab('traditional')">
+        <i class='bx bx-list-check'></i> تسجيل تقليدي (يدوي)
+      </div>
+      <div class="tab-item" onclick="switchTab('modern')">
+        <i class='bx bx-qr-scan'></i> تسجيل ذكي (QR)
+      </div>
+      <div class="tab-item" onclick="switchTab('reports')">
+        <i class='bx bx-stats'></i> تقارير الحضور
+      </div>
+    </div>
+
+    <main class="main-content">
+      
+      <!-- 1. Traditional Tab -->
+      <section id="traditionalTab" class="hub-content active">
+        <div class="control-card">
+          <div class="form-group">
+            <label>المجموعة</label>
+            <select id="tradGroup">
+              <option value="">-- اختر مجموعة --</option>
+              <% groups.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>التاريخ</label>
+            <input type="date" id="tradDate" value="<%= new Date().toISOString().split('T')[0] %>">
+          </div>
+          <button class="btn-action" onclick="loadManualList()"><i class='bx bx-search'></i> عرض القائمة</button>
+        </div>
+
+        <div id="manualTableContainer" style="display: none;">
+          <div class="attendance-table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>الطالب</th>
+                  <th>رقم الهاتف</th>
+                  <th>الحالة</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="manualTbody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+            <button class="btn-action" style="background:var(--accent);" onclick="saveBulkManual()">حفظ سجل الحضور</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Modern Tab -->
+      <section id="modernTab" class="hub-content">
+        <div class="control-card">
+          <div class="form-group">
+            <label>المجموعة الحالية</label>
+            <select id="scanGroup">
+              <option value="">-- اختر مجموعة للمسح --</option>
+              <% groups.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <button class="btn-action" id="scannerToggle" onclick="toggleScanner()"><i class='bx bx-camera'></i> تشغيل الكاميرا</button>
+        </div>
+
+        <div class="qr-grid">
+          <div class="scanner-panel">
+            <div id="reader"></div>
+            <div class="scanner-overlay" id="qrOverlay" style="display:none;"></div>
+            
+            <!-- Manual Input Overlay/Bar -->
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); padding: 10px; display: flex; gap: 10px; z-index: 20;">
+              <input type="text" id="manualCode" placeholder="أو ادخل كود الطالب يدوياً..." 
+                     style="flex:1; border:none; padding:10px; border-radius:8px; font-family:inherit;">
+              <button onclick="onScan(document.getElementById('manualCode').value)" 
+                      style="background:var(--topbar-bg); color:white; border:none; padding:0 20px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:700;">تسجيل</button>
+            </div>
+          </div>
+          <div class="feedback-panel">
+            <div class="scanned-avatar" id="sAvatar"><i class='bx bx-user'></i></div>
+            <div class="scanned-name" id="sName">في انتظار المسح...</div>
+            <div id="sStatus" style="font-weight: 700;"></div>
+            <div id="sDebt" style="margin-top: 1rem;"></div>
+            
+            <hr style="margin: 2rem 0; opacity: 0.1;">
+            <div style="text-align: right;">
+              <h4 style="font-size: 0.9rem; color: #888; margin-bottom: 1rem;">آخر عمليات المسح:</h4>
+              <div id="historyList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Reports Tab -->
+      <section id="reportsTab" class="hub-content">
+        <div class="control-card">
+          <div class="form-group">
+            <label>المجموعة</label>
+            <select id="reportGroup">
+              <option value="">-- اختر مجموعة للاستعلام --</option>
+              <% groups.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>من تاريخ</label>
+            <input type="date" id="reportStart" value="<%= new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0] %>">
+          </div>
+          <div class="form-group">
+            <label>إلى تاريخ</label>
+            <input type="date" id="reportEnd" value="<%= new Date().toISOString().split('T')[0] %>">
+          </div>
+          <button class="btn-action" onclick="loadDetailedReport()"><i class='bx bx-filter-alt'></i> استخراج التقرير</button>
+        </div>
+
+        <div id="reportStats" class="reports-grid" style="display: none; margin-bottom: 2rem;">
+          <div class="report-stat-card">
+            <div class="stat-ico" style="background:#e8f5e9; color:#2e7d32;"><i class='bx bx-check-double'></i></div>
+            <div>
+              <div id="statPresenceRate" style="font-size: 1.5rem; font-weight: 800;">0%</div>
+              <div style="font-size: 0.8rem; color:#888;">نسبة الحضور</div>
+            </div>
+          </div>
+          <div class="report-stat-card">
+            <div class="stat-ico" style="background:#e3f2fd; color:#1e88e5;"><i class='bx bx-user-voice'></i></div>
+            <div>
+              <div id="statPresent" style="font-size: 1.5rem; font-weight: 800;">0</div>
+              <div style="font-size: 0.8rem; color:#888;">إجمالي الحضور</div>
+            </div>
+          </div>
+          <div class="report-stat-card">
+            <div class="stat-ico" style="background:#ffebee; color:#d63031;"><i class='bx bx-user-x'></i></div>
+            <div>
+              <div id="statAbsent" style="font-size: 1.5rem; font-weight: 800;">0</div>
+              <div style="font-size: 0.8rem; color:#888;">إجمالي الغياب</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="reportTableContainer" style="display: none;">
+          <div class="attendance-table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>اسم الطالب</th>
+                  <th>الحالة</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="reportTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.hub-content').forEach(c => c.classList.remove('active'));
+      
+      const activeTab = event ? event.currentTarget : document.querySelector(`.tab-item[onclick*="${tab}"]`);
+      activeTab.classList.add('active');
+      document.getElementById(`${tab}Tab`).classList.add('active');
+      
+      // Stop scanner if switching away from modern
+      if (tab !== 'modern' && isScanning) toggleScanner();
+    }
+
+    // --- Traditional Logic ---
+    async function loadManualList() {
+      const gId = document.getElementById('tradGroup').value;
+      const date = document.getElementById('tradDate').value;
+      if (!gId) return Swal.fire('تنبيه', 'برجاء اختيار مجموعة', 'warning');
+
+      try {
+        const res = await fetch(`/center/attendance/api/${gId}/${date}`);
+        const result = await res.json();
+        if (result.success) {
+          renderManualTable(result.data);
+          document.getElementById('manualTableContainer').style.display = 'block';
+        }
+      } catch (e) { Swal.fire('خطأ', 'فشل في تحميل القائمة', 'error'); }
+    }
+
+    function renderManualTable(data) {
+      const tbody = document.getElementById('manualTbody');
+      const recordsMap = {};
+      data.records.forEach(r => recordsMap[r.studentId] = r.status);
+
+      tbody.innerHTML = data.students.map(s => {
+        const status = recordsMap[s.id] || 'absent';
+        return `
+          <tr data-student-id="${s.id}">
+            <td><strong>${s.firstName} ${s.lastName}</strong><br><small style="color:#aaa;">#${s.barcode || s.id}</small></td>
+            <td>${s.phone || '---'}</td>
+            <td>
+              <div style="display:flex; gap:5px;">
+                <button class="status-pill present ${status === 'present' ? 'active' : ''}" onclick="setRowStatus(this, 'present')">حاضر</button>
+                <button class="status-pill absent ${status === 'absent' ? 'active' : ''}" onclick="setRowStatus(this, 'absent')">غائب</button>
+                <button class="status-pill late ${status === 'late' ? 'active' : ''}" onclick="setRowStatus(this, 'late')">متأخر</button>
+              </div>
+            </td>
+            <td><input type="text" class="row-notes" placeholder="..." style="border:1px solid #eee; padding:5px; border-radius:5px;"></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setRowStatus(btn, status) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.status-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    async function saveBulkManual() {
+      const gId = document.getElementById('tradGroup').value;
+      const date = document.getElementById('tradDate').value;
+      const records = [];
+      
+      document.querySelectorAll('#manualTbody tr').forEach(tr => {
+        const studentId = tr.dataset.studentId;
+        const activeBtn = tr.querySelector('.status-pill.active');
+        const status = activeBtn.classList.contains('present') ? 'present' : 
+                       (activeBtn.classList.contains('late') ? 'late' : 'absent');
+        const notes = tr.querySelector('.row-notes').value;
+        records.push({ studentId: parseInt(studentId), status, notes });
+      });
+
+      const res = await fetch('/center/attendance/api/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupId: gId, date, records })
+      });
+      if (res.ok) Swal.fire('تم!', 'تم حفظ سجل الحضور بنجاح', 'success');
+    }
+
+    // --- Modern QR Logic ---
+    let html5QrCode;
+    let isScanning = false;
+    const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+    async function toggleScanner() {
+      const gId = document.getElementById('scanGroup').value;
+      if (!gId) return Swal.fire('تنبيه', 'اختر المجموعة أولاً', 'info');
+      
+      const btn = document.getElementById('scannerToggle');
+      const overlay = document.getElementById('qrOverlay');
+
+      if (isScanning) {
+        await html5QrCode.stop();
+        isScanning = false;
+        btn.innerHTML = `<i class='bx bx-camera'></i> تشغيل الكاميرا`;
+        overlay.style.display = 'none';
+      } else {
+        html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScan);
+        isScanning = true;
+        btn.innerHTML = `<i class='bx bx-stop-circle'></i> إيقاف الكاميرا`;
+        overlay.style.display = 'block';
+      }
+    }
+
+    async function onScan(barcode) {
+      if (!barcode) return;
+      const gId = document.getElementById('scanGroup').value;
+      if (!gId) return Swal.fire('تنبيه', 'برجاء اختيار مجموعة أولاً', 'warning');
+      
+      const date = new Date().toISOString().split('T')[0];
+      
+      try {
+        const res = await fetch('/center/attendance/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: gId, date, barcode })
+        });
+        const r = await res.json();
+        if (r.success) {
+          successSound.play();
+          updateFeedback(r.data);
+          document.getElementById('manualCode').value = ''; 
+        } else {
+          Swal.fire('خطأ', r.message || 'فشل تسجيل الحضور', 'error');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Add Enter listener for manual code
+    document.addEventListener('DOMContentLoaded', () => {
+      const manualInput = document.getElementById('manualCode');
+      if (manualInput) {
+        manualInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') onScan(manualInput.value);
+        });
+      }
+    });
+
+    function updateFeedback(data) {
+      const { student, isDuplicate, debt } = data;
+      document.getElementById('sName').innerText = `${student.firstName} ${student.lastName}`;
+      document.getElementById('sStatus').innerHTML = isDuplicate 
+        ? `<span style="color:var(--danger)">مُسجل مسبقاً!</span>` 
+        : `<span style="color:var(--accent)">تم التسجيل بنجاح ✅</span>`;
+      
+      document.getElementById('sDebt').innerHTML = debt > 0 
+        ? `<div style="background:#fff3e0; color:#ef6c00; padding:10px; border-radius:10px; font-weight:800;">تنبيه: عليه مديونية ${debt} ج.م</div>` 
+        : '';
+    }
+
+    // --- Detailed Reports Logic ---
+    async function loadDetailedReport() {
+      const gId = document.getElementById('reportGroup').value;
+      const start = document.getElementById('reportStart').value;
+      const end = document.getElementById('reportEnd').value;
+
+      if (!gId || !start || !end) return Swal.fire('تنبيه', 'يرجى إكمال جميع الخيارات لبحث التقرير', 'info');
+
+      Swal.fire({ title: 'جاري جمع البيانات...', didOpen: () => Swal.showLoading() });
+
+      try {
+        const res = await fetch(`/center/attendance/api/reports?groupId=${gId}&startDate=${start}&endDate=${end}`);
+        const result = await res.json();
+        
+        if (result.success) {
+          Swal.close();
+          const { stats, records } = result.data;
+          
+          // Update Stats
+          document.getElementById('statPresenceRate').innerText = stats.presenceRate + '%';
+          document.getElementById('statPresent').innerText = stats.present;
+          document.getElementById('statAbsent').innerText = stats.absent;
+          document.getElementById('reportStats').style.display = 'grid';
+
+          // Update Table
+          const tbody = document.getElementById('reportTbody');
+          tbody.innerHTML = records.map(r => `
+            <tr>
+              <td>${new Date(r.date).toLocaleDateString('ar-EG')}</td>
+              <td><strong>${r.student.firstName} ${r.student.lastName}</strong></td>
+              <td>
+                <span style="color:${r.status === 'present' ? '#2e7d32' : (r.status === 'late' ? '#ef6c00' : '#d63031')}; font-weight:700;">
+                  ${r.status === 'present' ? 'حاضر' : (r.status === 'late' ? 'متأخر' : 'غائب')}
+                </span>
+              </td>
+              <td>${r.notes || '---'}</td>
+            </tr>
+          `).join('');
+          
+          document.getElementById('reportTableContainer').style.display = 'block';
+        }
+      } catch (e) {
+        Swal.fire('خطأ', 'فشل تحميل التقرير', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>

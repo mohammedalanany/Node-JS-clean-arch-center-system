@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #ec4899;
+      --bg-dark: #0f172a;
+      --bg-panel: rgba(30, 41, 59, 0.7);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --input-bg: rgba(15, 23, 42, 0.6);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 100% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar - Same as Superadmin */
+    .sidebar {
+      width: 280px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--bg-panel);
+      border-left: 1px solid var(--glass-border);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(to left, #818cf8, #e879f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 3rem;
+    }
+
+    .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem;
+      color: var(--text-muted); text-decoration: none; border-radius: 12px;
+      font-weight: 600; transition: all 0.3s ease;
+    }
+    .nav-item i { font-size: 1.25rem; }
+    .nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.05); color: var(--text-main); transform: translateX(-5px); }
+    .nav-item.active { background: linear-gradient(270deg, rgba(79, 70, 229, 0.2) 0%, transparent 100%); border-right: 4px solid var(--primary); }
+
+    .main-content {
+      flex: 1;
+      padding: 2.5rem 4rem;
+      overflow-y: auto;
+    }
+
+    .top-header { margin-bottom: 3rem; display: flex; align-items: center; justify-content: space-between; }
+    h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; }
+    p.subtitle { color: var(--text-muted); margin-top: 0.5rem; }
+
+    /* Form Card */
+    .form-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 3rem;
+      max-width: 600px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    
+    .form-group input, .form-group textarea {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    .submit-btn {
+      background: linear-gradient(to left, var(--primary), #8b5cf6);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Cairo', sans-serif;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .back-btn:hover { color: var(--text-main); }
+
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i class='bx bx-cube-alt'></i> نظام السنتر
+    </div>
+    
+    <nav class="nav-links">
+      <a href="/dashboard" class="nav-item">
+        <i class='bx bx-grid-alt'></i> لوحة القيادة
+      </a>
+      <a href="/centers" class="nav-item active">
+        <i class='bx bx-buildings'></i> إدارة السناتر
+      </a>
+      <a href="#" class="nav-item">
+        <i class='bx bx-user-circle'></i> المديرين
+      </a>
+      <a href="#" class="nav-item">
+        <i class='bx bx-cog'></i> الإعدادات
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-header">
+      <div>
+        <a href="/dashboard" class="back-btn"><i class='bx bx-right-arrow-alt'></i> العودة للوحة القيادة</a>
+        <h1 style="margin-top: 1rem;">إضافة سنتر جديد</h1>
+        <p class="subtitle">قم بإنشاء مساحة عمل مستقلة لمركز تعليمي جديد.</p>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form method="POST" action="/centers/new">
+        
+        <div class="form-group">
+          <label for="name">اسم السنتر (إلزامي)</label>
+          <input type="text" id="name" name="name" required placeholder="مثال: أكاديمية النجاح">
+        </div>
+
+        <div class="form-group">
+          <label for="email">البريد الإلكتروني للسنتر</label>
+          <input type="email" id="email" name="email" placeholder="contact@alnajah.com">
+        </div>
+
+        <div class="form-group">
+          <label for="phone">رقم الهاتف</label>
+          <input type="text" id="phone" name="phone" placeholder="01XXXXXXXXX">
+        </div>
+
+        <div class="form-group">
+          <label for="address">العنوان التفصيلي</label>
+          <textarea id="address" name="address" rows="3" placeholder="المقر الرئيسي للسنتر..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn"><i class='bx bx-buildings'></i> إنشاء السنتر الآن</button>
+      </form>
+    </div>
+  
+  <%- include('../partials/footer') %>
+    </main>
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  
+  <% if (error) { %>
+    <script>
+      Toastify({ text: "<%= error %>", duration: 4000, close: true, gravity: "top", position: "center",
+        style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)", borderRadius: "8px", fontFamily: "'Cairo', sans-serif" }
+      }).showToast();
+    </script>
+  <% } %>
+  
+  <% if (success) { %>
+    <script>
+      Toastify({ text: "<%= success %>", duration: 4000, close: true, gravity: "top", position: "center",
+        style: { background: "linear-gradient(to right, #11998e, #38ef7d)", borderRadius: "8px", fontFamily: "'Cairo', sans-serif" }
+      }).showToast();
+    </script>
+  <% } %>
+
+
+</body>
+</html>

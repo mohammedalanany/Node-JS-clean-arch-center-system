@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    :root {
+      --sidebar-bg: #333333;
+      --topbar-bg: #4aa3df;
+      --bg-body: #e5e5e5;
+      --primary: #4aa3df;
+      --accent: #5cb85c;
+      --text-main: #333;
+      --text-muted: #777;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-body);
+      display: flex;
+      min-height: 100vh;
+      color: var(--text-main);
+    }
+
+    /* Layout Wrapper */
+    .wrapper { flex: 1; display: flex; flex-direction: column; }
+
+    /* Top Bar */
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; font-size: 1.2rem; font-weight: bold; justify-content: space-between; }
+    
+    /* Main Content */
+    .main-content { padding: 2rem; overflow-y: auto; }
+
+    .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #333; }
+
+    /* Card & Table Info */
+    .card { background: white; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 2rem; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 1rem; text-align: right; border-bottom: 1px solid #eee; }
+    th { color: var(--text-muted); font-weight: 700; font-size: 0.9rem; background: #f9f9f9; }
+    tr:hover td { background: #fdfdfd; }
+
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .empty-state i { font-size: 5rem; opacity: 0.2; color: #333; margin-bottom: 1rem; }
+
+    .btn-action { background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: 600; transition: 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+    .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+    .btn-outline { background: transparent; color: var(--topbar-bg); border: 1px solid var(--topbar-bg); }
+    .btn-outline:hover { background: var(--topbar-bg); color: white; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <%- include('../partials/center-sidebar', { active: 'students' }) %>
+
+  <!-- Main Content Wrapper -->
+  <div class="wrapper">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <span>سجل الطلاب / إدارة شؤون الطلبة</span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-user'></i> <%= user ? user.firstName : 'مدير السنتر' %></div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-flex-wrapper" style="display: flex; flex: 1; min-height: 0;">
+    <main class="main-content" style="flex: 1;">
+      <div class="header-actions">
+        <h1>إدارة شؤون الطلاب</h1>
+        <button class="btn-action" onclick="openModal()">+ تسجيل طالب جديد</button>
+      </div>
+
+      <!-- Quick Stats -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="card" style="padding: 1rem; display: flex; align-items: center; gap: 12px; background: white;">
+          <div style="width: 45px; height: 45px; border-radius: 8px; background: #e3f2fd; color: #1e88e5; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class='bx bx-group'></i>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: #777;">إجمالي الطلاب</div>
+            <div style="font-size: 1.2rem; font-weight: 700;"><%= students ? students.length : 0 %></div>
+          </div>
+        </div>
+        <div class="card" style="padding: 1rem; display: flex; align-items: center; gap: 12px; background: white;">
+          <div style="width: 45px; height: 45px; border-radius: 8px; background: #e8f5e9; color: #2e7d32; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class='bx bx-check-circle'></i>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: #777;">الطلاب النشطين</div>
+            <div style="font-size: 1.2rem; font-weight: 700;"><%= students ? students.filter(s => s.status === 'active').length : 0 %></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x: auto;">
+          <% if (students && students.length > 0) { %>
+            <table>
+              <thead>
+                <tr>
+                  <th>باركود / كود الطالب</th>
+                  <th>اسم الطالب</th>
+                  <th>السنة الدراسية</th>
+                  <th>رقم الهاتف</th>
+                  <th>الحالة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% students.forEach(student => { %>
+                  <tr>
+                    <% 
+                      const stageMap = { 'primary': 'ابتدائى', 'preparatory': 'إعدادى', 'secondary': 'ثانوى' };
+                      const gradeMap = { 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6' };
+                    %>
+                    <td style="font-weight: 600; color: var(--topbar-bg); font-family: monospace;"><%= student.barcode || student.id %></td>
+                    <td style="font-weight: 700;"><%= student.firstName + ' ' + (student.lastName || '') %></td>
+                    <td><%= gradeMap[student.grade] %> <%= stageMap[student.stage] %></td>
+                    <td><%= student.phone || '---' %></td>
+                    <td>
+                      <span class="status-badge <%= student.status %>">
+                        <%= student.status === 'active' ? 'نشط' : (student.status === 'suspended' ? 'موقوف' : 'تم التخرج') %>
+                      </span>
+                    </td>
+                    <td>
+                      <a href="/center/students/<%= student.id %>/profile" class="btn-action btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        <i class='bx bx-id-card'></i> ملف الطالب
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <div class="empty-state">
+              <i class='bx bx-user-circle'></i>
+              <h3>لا يوجد أي طلاب مسجلين بالسنتر.</h3>
+              <p style="margin-top: 0.5rem; margin-bottom: 1.5rem;">ابدأ بإضافة الطلاب وتوزيعهم على المجاميع الدراسية.</p>
+              <button class="btn-action" onclick="openModal()">+ تسجيل طالب جديد الآن</button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    
+  <%- include('../partials/footer') %>
+    </main>
+
+    <!-- Modal for Adding Student -->
+    <div id="studentModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2><i class='bx bx-user-plus'></i> تسجيل طالب جديد</h2>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="addStudentForm" onsubmit="handleFormSubmit(event)">
+          <div class="modal-body">
+            <!-- Basic Info Section -->
+            <div class="form-section-title">البيانات الأساسية</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>الاسم الأول</label>
+                <input type="text" name="firstName" required placeholder="اسم الطالب">
+              </div>
+              <div class="form-group">
+                <label>الاسم الأخير (العائلة)</label>
+                <input type="text" name="lastName" required placeholder="اسم الأب والجد">
+              </div>
+              <div class="form-group">
+                <label>تاريخ الميلاد</label>
+                <input type="date" name="dateOfBirth">
+              </div>
+              <div class="form-group">
+                <label>الباركود / كود الطالب (اختياري)</label>
+                <input type="text" name="barcode" placeholder="سيتم إنشاؤه تلقائياً إذا تركه فارغاً">
+              </div>
+            </div>
+
+            <!-- Contact Info Section -->
+            <div class="form-section-title" style="margin-top: 1.5rem;">بيانات التواصل</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>رقم هاتف الطالب</label>
+                <input type="text" name="phone" placeholder="01xxxxxxxxx">
+              </div>
+              <div class="form-group">
+                <label>رقم هاتف ولي الأمر (هام)</label>
+                <input type="text" name="parentPhone" required placeholder="للتواصل والتقارير">
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>العنوان السكني</label>
+                <input type="text" name="address" placeholder="المنطقة، الشارع، المبنى">
+              </div>
+            </div>
+
+            <!-- Academic Info Section -->
+            <div class="form-section-title" style="margin-top: 1.5rem;">التفاصيل الدراسية</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>المرحلة الدراسية</label>
+                <select name="stage" id="stageSelect" onchange="updateGrades()" required>
+                  <option value="">اختر المرحلة</option>
+                  <option value="primary">الابتدائية</option>
+                  <option value="preparatory">الإعدادية</option>
+                  <option value="secondary">الثانوية</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>الصف الدراسي</label>
+                <select name="grade" id="gradeSelect" required disabled>
+                  <option value="">اختر الصف</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>المدرسة</label>
+                <input type="text" name="school" placeholder="اسم المدرسة">
+              </div>
+              <div class="form-group" id="trackSelectGroup" style="display: none;">
+                <label>الشعبة / المسار</label>
+                <select name="track">
+                  <option value="general">عام (لأولى ثانوي)</option>
+                  <option value="scientific">علمي</option>
+                  <option value="literary">أدبي</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-action btn-outline" style="background: #f5f5f5; border-color: #ddd; color: #666;" onclick="closeModal()">إلغاء</button>
+            <button type="submit" class="btn-action">حفظ البيانات والتسجيل</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <%- include('../partials/center-ads') %>
+
+    <style>
+      .status-badge { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+      .status-badge.active { background: #e8f5e9; color: #2e7d32; }
+      .status-badge.suspended { background: #fff3e0; color: #ef6c00; }
+      .status-badge.graduated { background: #f3e5f5; color: #7b1fa2; }
+
+      /* Modal Styles */
+      .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 2rem; backdrop-filter: blur(4px); }
+      .modal-card { background: white; width: 100%; max-width: 750px; border-radius: 8px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out; }
+      @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      
+      .modal-header { background: #f8f9fa; padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
+      .modal-header h2 { font-size: 1.25rem; color: #333; display: flex; align-items: center; gap: 10px; }
+      .close-btn { background: none; border: none; font-size: 1.75rem; cursor: pointer; color: #999; }
+      
+      .modal-body { padding: 2rem; max-height: 70vh; overflow-y: auto; }
+      .form-section-title { font-size: 0.9rem; font-weight: 800; color: var(--topbar-bg); border-bottom: 2px solid #eef2f7; padding-bottom: 5px; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+      .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+      .form-group { display: flex; flex-direction: column; gap: 6px; }
+      .form-group label { font-weight: 700; font-size: 0.85rem; color: #555; }
+      .form-group input, .form-group select { padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.3s; }
+      .form-group input:focus, .form-group select:focus { border-color: var(--topbar-bg); box-shadow: 0 0 0 3px rgba(74, 163, 223, 0.1); }
+      
+      .modal-footer { padding: 1.5rem 2rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 1rem; background: #fafafa; }
+    </style>
+
+    <script>
+      function updateGrades() {
+        const stage = document.getElementById('stageSelect').value;
+        const gradeSelect = document.getElementById('gradeSelect');
+        const trackGroup = document.getElementById('trackSelectGroup');
+        
+        gradeSelect.innerHTML = '<option value="">اختر الصف</option>';
+        gradeSelect.disabled = !stage;
+        trackGroup.style.display = (stage === 'secondary') ? 'flex' : 'none';
+
+        if (stage === 'primary') {
+          for (let i = 1; i <= 6; i++) {
+            gradeSelect.innerHTML += `<option value="${i}">الصف ${i} الابتدائي</option>`;
+          }
+        } else if (stage === 'preparatory') {
+          for (let i = 1; i <= 3; i++) {
+            gradeSelect.innerHTML += `<option value="${i}">الصف ${i} الإعدادي</option>`;
+          }
+        } else if (stage === 'secondary') {
+          for (let i = 1; i <= 3; i++) {
+            gradeSelect.innerHTML += `<option value="${i}">الصف ${i} الثانوي</option>`;
+          }
+        }
+      }
+
+      function openModal() {
+        document.getElementById('studentModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        document.getElementById('studentModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+
+      async function handleFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const rawData = Object.fromEntries(formData.entries());
+        
+        // Data Cleaning & Type Casting
+        const data = { ...rawData };
+        if (data.grade) data.grade = parseInt(data.grade);
+        
+        // Remove empty optional fields to avoid validation errors (Crucial for DTO compatibility)
+        const optionalFields = ['barcode', 'phone', 'email', 'school', 'dateOfBirth', 'photoUrl', 'address'];
+        optionalFields.forEach(field => {
+          if (data[field] === '') {
+            delete data[field];
+          }
+        });
+
+        try {
+          const response = await fetch('/api/v1/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+          if (result.success) {
+            await Swal.fire({
+              title: 'تم التسجيل!',
+              text: 'تم إضافة الطالب بنجاح إلى قاعدة البيانات 🚀',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+            location.reload();
+          } else {
+            Swal.fire({
+              title: 'تعذر التسجيل',
+              html: result.errors ? result.errors.join('<br>') : (result.message || 'فشل في حفظ البيانات'),
+              icon: 'error'
+            });
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          Swal.fire({
+            title: 'خطأ فني',
+            text: 'حدث خطأ غير متوقع أثناء الاتصال بالسيرفر، يرجى المحاولة لاحقاً.',
+            icon: 'error'
+          });
+        }
+      }
+
+      // Close modal on outside click
+      window.onclick = function(event) {
+        const modal = document.getElementById('studentModal');
+        if (event.target == modal) closeModal();
+      }
+    </script>
+    </div>
+  </div>
+
+</body>
+</html>

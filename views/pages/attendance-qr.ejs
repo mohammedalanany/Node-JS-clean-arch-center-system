@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    :root {
+      --sidebar-bg: #333333;
+      --topbar-bg: #4aa3df;
+      --bg-body: #f0f2f5;
+      --accent: #5cb85c;
+      --danger: #d9534f;
+      --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); color: #333; display: flex; min-height: 100vh; overflow: hidden; }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; justify-content: space-between; font-weight: bold; flex-shrink: 0; z-index: 10; }
+    
+    .main-grid { display: grid; grid-template-columns: 1fr 400px; flex: 1; overflow: hidden; }
+
+    /* Left Side: Scanner */
+    .scanner-section { padding: 2rem; display: flex; flex-direction: column; gap: 2rem; overflow-y: auto; background: #fff; }
+    
+    .scanner-config { background: #f8f9fa; padding: 1.5rem; border-radius: 12px; display: flex; gap: 1rem; align-items: flex-end; }
+    .form-group { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .form-group label { font-weight: 700; font-size: 0.9rem; color: #555; }
+    .form-group select, .form-group input { padding: 0.8rem; border: 2px solid #ddd; border-radius: 10px; font-family: inherit; font-size: 1rem; outline: none; }
+    
+    .scanner-container { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: #222; border-radius: 20px; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.5); min-height: 400px; }
+    #reader { width: 100%; border: none !important; }
+    #reader__scan_region { background: transparent !important; }
+    #reader__dashboard { display: none !important; }
+
+    .scan-overlay { position: absolute; width: 250px; height: 250px; border: 4px solid var(--topbar-bg); border-radius: 24px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.5); pointer-events: none; z-index: 5; }
+    .scan-overlay::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--topbar-bg); animation: scanLine 2s linear infinite; box-shadow: 0 0 15px var(--topbar-bg); }
+    @keyframes scanLine { from { top: 0; } to { top: 100%; } }
+
+    /* Right Side: Feedback & History */
+    .sidebar-feedback { background: #fdfdfd; border-right: 1px solid #eee; display: flex; flex-direction: column; }
+    
+    .current-scan-panel { padding: 2rem; background: white; border-bottom: 1px solid #eee; min-height: 250px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .s-avatar { width: 100px; height: 100px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #ccc; margin-bottom: 1rem; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .s-name { font-size: 1.4rem; font-weight: 800; color: #333; }
+    .s-status { margin-top: 0.5rem; font-weight: 700; padding: 4px 15px; border-radius: 20px; font-size: 0.85rem; }
+    .s-status.success { background: #e8f5e9; color: #2e7d32; }
+    .s-status.error { background: #ffebee; color: #d32f2f; }
+    
+    .debt-warning { margin-top: 1rem; background: #fff3e0; color: #ef6c00; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 800; border: 2px solid #ffe0b2; animation: shake 0.5s ease-in-out; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    .scan-history { flex: 1; padding: 1.5rem; overflow-y: auto; }
+    .history-title { font-weight: 800; color: #777; font-size: 0.9rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .history-item { display: flex; align-items: center; gap: 12px; padding: 0.75rem; background: white; border-radius: 10px; margin-bottom: 0.6rem; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .h-icon { width: 32px; height: 32px; border-radius: 50%; background: #e3f2fd; color: #1e88e5; display: flex; align-items: center; justify-content: center; }
+    .h-name { font-weight: 700; font-size: 0.9rem; flex: 1; }
+    .h-time { font-size: 0.75rem; color: #999; }
+
+    /* Audio Controls */
+    .audio-toggle { position: absolute; bottom: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.9); padding: 0.5rem 1rem; border-radius: 30px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10; border: 1px solid #ddd; }
+
+    .btn-start { background: var(--accent); color: white; border: none; padding: 0.8rem 2rem; border-radius: 10px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'attendance-qr' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <span>تسجيل الحضور السريع / QR Attendance Scanner</span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-qr-scan'></i> الحضور الذكي</div>
+    </header>
+
+    <div class="main-grid">
+      <!-- Scanner Section -->
+      <section class="scanner-section">
+        <div class="scanner-config">
+          <div class="form-group">
+            <label>المرحلة / المجموعة الحالية</label>
+            <select id="groupSelect">
+              <option value="">-- اختر المجموعة للتحضير --</option>
+              <% groups.forEach(group => { %>
+                <option value="<%= group.id %>"><%= group.name %> (<%= group.stage %>)</option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>تاريخ الحصة</label>
+            <input type="date" id="scanDate" value="<%= new Date().toISOString().split('T')[0] %>">
+          </div>
+          <button class="btn-start" id="startBtn" onclick="toggleScanner()">
+            <i class='bx bx-power-off'></i> تشغيل الكاميرا
+          </button>
+        </div>
+
+        <div class="scanner-container">
+          <div id="reader"></div>
+          <div class="scan-overlay" id="overlay" style="display: none;"></div>
+          
+          <div class="audio-toggle" onclick="toggleAudio()" id="audioBtn">
+             <i class='bx bxs-volume-full'></i> الصوت: مفعّل
+          </div>
+        </div>
+        
+        <div id="manualInput" style="display:flex; gap:10px;">
+           <input type="text" id="barcodeManual" placeholder="إدخال الكود يدوياً (أو استخدام قارئ خارجي)..." class="form-group" style="flex:1; padding: 10px; border:2px solid #ddd; border-radius:10px; font-family:inherit;">
+           <button onclick="handleScan(document.getElementById('barcodeManual').value)" class="btn-start" style="background:var(--topbar-bg); width:auto;">إدخال</button>
+        </div>
+      </section>
+
+      <!-- Feedback Sidebar -->
+      <aside class="sidebar-feedback">
+        <div class="current-scan-panel" id="resultPanel">
+          <div class="s-avatar" id="resAvatar">
+            <i class='bx bx-user'></i>
+          </div>
+          <div class="s-name" id="resName">في انتظار المسح...</div>
+          <div id="resStatus"></div>
+          <div id="resDebt"></div>
+        </div>
+
+        <div class="scan-history">
+          <div class="history-title"><i class='bx bx-history'></i> آخر المسوح في هذه الجلسة</div>
+          <div id="historyList">
+            <!-- Items injected via JS -->
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    let html5QrCode;
+    let isScanning = false;
+    let isAudioEnabled = true;
+    let lastScanTime = 0;
+    const SCAN_COOLDOWN = 1500; // 1.5s between scans
+
+    // Audio Engine
+    const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    const errorSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3');
+
+    function toggleAudio() {
+      isAudioEnabled = !isAudioEnabled;
+      const btn = document.getElementById('audioBtn');
+      btn.innerHTML = isAudioEnabled ? `<i class='bx bxs-volume-full'></i> الصوت: مفعّل` : `<i class='bx bxs-volume-mute'></i> الصوت: مكتوم`;
+    }
+
+    async function toggleScanner() {
+      const startBtn = document.getElementById('startBtn');
+      const overlay = document.getElementById('overlay');
+
+      if (isScanning) {
+        await html5QrCode.stop();
+        isScanning = false;
+        startBtn.innerHTML = `<i class='bx bx-power-off'></i> تشغيل الكاميرا`;
+        startBtn.style.background = 'var(--accent)';
+        overlay.style.display = 'none';
+      } else {
+        const groupId = document.getElementById('groupSelect').value;
+        if (!groupId) return Swal.fire('تنبيه', 'يرجى اختيار المجموعة أولاً', 'info');
+
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        try {
+          await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
+          isScanning = true;
+          startBtn.innerHTML = `<i class='bx bx-stop-circle'></i> إيقاف الكاميرا`;
+          startBtn.style.background = 'var(--danger)';
+          overlay.style.display = 'block';
+        } catch (err) {
+          Swal.fire('خطأ', 'تعذر الوصول للكاميرا', 'error');
+        }
+      }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      handleScan(decodedText);
+    }
+
+    async function handleScan(barcode) {
+      if (!barcode) return;
+      const now = Date.now();
+      if (now - lastScanTime < SCAN_COOLDOWN) return;
+      lastScanTime = now;
+
+      const groupId = document.getElementById('groupSelect').value;
+      const date = document.getElementById('scanDate').value;
+      
+      if (!groupId) return;
+
+      try {
+        const res = await fetch('/center/attendance/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId, date, barcode })
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+          updateUI(result.data);
+          addToHistory(result.data.student);
+          if (isAudioEnabled) successSound.play();
+        } else {
+          showErrorUI(result.message);
+          if (isAudioEnabled) errorSound.play();
+        }
+        
+        document.getElementById('barcodeManual').value = '';
+      } catch (err) {
+        showErrorUI('خطأ فني في السيرفر');
+        if (isAudioEnabled) errorSound.play();
+      }
+    }
+
+    function updateUI(data) {
+      const student = data.student;
+      const resName = document.getElementById('resName');
+      const resAvatar = document.getElementById('resAvatar');
+      const resStatus = document.getElementById('resStatus');
+      const resDebt = document.getElementById('resDebt');
+
+      resName.innerText = `${student.firstName} ${student.lastName}`;
+      resAvatar.innerHTML = student.photoUrl ? `<img src="${student.photoUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : `<i class='bx bx-user'></i>`;
+      
+      if (data.isDuplicate) {
+        resStatus.innerHTML = `<span class="s-status error">تم التحضير مسبقاً!</span>`;
+      } else {
+        resStatus.innerHTML = `<span class="s-status success">تم تسجيل الحضور بنجاح ✅</span>`;
+      }
+
+      if (data.debt > 0) {
+        resDebt.innerHTML = `<div class="debt-warning"><i class='bx bx-error'></i> لديه متأخرات مالية: ${data.debt} ج.م</div>`;
+      } else {
+        resDebt.innerHTML = '';
+      }
+    }
+
+    function showErrorUI(msg) {
+      document.getElementById('resName').innerText = 'فشل المسح';
+      document.getElementById('resAvatar').innerHTML = `<i class='bx bx-x-circle' style="color:var(--danger)"></i>`;
+      document.getElementById('resStatus').innerHTML = `<span class="s-status error">${msg}</span>`;
+      document.getElementById('resDebt').innerHTML = '';
+    }
+
+    function addToHistory(student) {
+      const list = document.getElementById('historyList');
+      const time = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div class="h-icon"><i class='bx bx-check'></i></div>
+        <div class="h-name">${student.firstName} ${student.lastName}</div>
+        <div class="h-time">${time}</div>
+      `;
+      list.prepend(item);
+      if (list.children.length > 5) list.removeChild(list.lastChild);
+    }
+    
+    // Auto focus manual input
+    document.getElementById('barcodeManual').focus();
+  </script>
+
+</body>
+</html>

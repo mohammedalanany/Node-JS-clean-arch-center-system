@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4aa3df; --primary-light: #e3f2fd; --sidebar-bg: #333;
+      --bg-body: #f4f7f6; --text-main: #333; --border: #edf2f7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); display: flex; min-height: 100vh; color: var(--text-main); }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; }
+    .topbar { height: 60px; background: white; border-bottom: 2px solid var(--border); display: flex; align-items: center; padding: 0 2rem; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .main-content { padding: 2rem; }
+
+    .header-section { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .header-section h1 { font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+
+    /* Calendar Grid */
+    .calendar-container { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow-x: auto; }
+    .calendar-grid { display: grid; grid-template-columns: 100px repeat(7, 1fr); min-width: 1000px; }
+    
+    .grid-header { background: #fafafa; border-bottom: 2px solid var(--border); padding: 1.25rem 0.5rem; text-align: center; font-weight: 800; font-size: 0.95rem; color: #555; }
+    .time-col { background: #fafafa; border-left: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #777; border-bottom: 1px solid var(--border); }
+    
+    .day-cell { border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); min-height: 80px; position: relative; padding: 8px; }
+    .day-cell:last-child { border-left: none; }
+    
+    /* Event Card */
+    .event-card { background: var(--primary-light); border-right: 4px solid var(--primary); padding: 8px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .event-card:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(74, 163, 223, 0.2); }
+    .event-time { font-size: 0.75rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .event-name { font-size: 0.85rem; font-weight: 800; color: #2c3e50; line-height: 1.3; }
+    .event-type { font-size: 0.7rem; color: #7f8c8d; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+    .legend { display: flex; gap: 1.5rem; margin-top: 1.5rem; background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); width: fit-content; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
+    .dot { width: 12px; height: 12px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'schedule' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <div style="font-weight: 800;"><i class='bx bx-calendar' style="color:var(--primary);"></i> الجدول الدراسي الأسبوعي</div>
+      <div style="font-size: 0.9rem; color: #777;"><%= user.firstName %> | لوحة تحكم السنتر</div>
+    </header>
+
+    <main class="main-content">
+      <div class="header-section">
+        <div>
+          <h1>تخطيط المواعيد</h1>
+          <p style="color: #777;">عارض زمني لكافة مجموعات السنتر خلال أيام الأسبوع</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-primary" style="background:var(--primary); color:white; border:none; padding: 0.8rem 1.5rem; border-radius: 10px; font-family: inherit; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="location.href='/center/groups'">
+            <i class='bx bx-plus-circle'></i> إضافة/تعديل المواعيد
+          </button>
+        </div>
+      </div>
+
+      <%
+        const days = [
+          { key: 'saturday', label: 'السبت' },
+          { key: 'sunday', label: 'الأحد' },
+          { key: 'monday', label: 'الإثنين' },
+          { key: 'tuesday', label: 'الثلاثاء' },
+          { key: 'wednesday', label: 'الأربعاء' },
+          { key: 'thursday', label: 'الخميس' },
+          { key: 'friday', label: 'الجمعة' }
+        ];
+
+        // Organize schedule by day
+        const scheduleByDay = {};
+        days.forEach(d => scheduleByDay[d.key] = []);
+
+        groups.forEach(group => {
+          if (group.weeklySchedule) {
+            group.weeklySchedule.forEach(s => {
+              if (scheduleByDay[s.day]) {
+                scheduleByDay[s.day].push({ ...s, groupName: group.name, groupId: group.id, type: group.type });
+              }
+            });
+          }
+        });
+
+        // Time slots (from 8 AM to 11 PM)
+        const timeSlots = [];
+        for(let i=8; i<=22; i++) {
+          timeSlots.push({ hour: i, label: `${i > 12 ? i-12 : i}:00 ${i >= 12 ? 'م' : 'ص'}` });
+        }
+      %>
+
+      <div class="calendar-container">
+        <div class="calendar-grid">
+          <!-- Headers -->
+          <div class="grid-header" style="background: #f1f1f1;">الوقت</div>
+          <% days.forEach(day => { %>
+            <div class="grid-header"><%= day.label %></div>
+          <% }) %>
+
+          <!-- Time Rows -->
+          <% timeSlots.forEach(slot => { %>
+            <div class="time-col"><%= slot.label %></div>
+            <% days.forEach(day => { %>
+              <div class="day-cell">
+                <% 
+                  const events = scheduleByDay[day.key].filter(e => {
+                    const startHour = parseInt(e.startTime.split(':')[0]);
+                    return startHour === slot.hour;
+                  });
+                %>
+                <% events.forEach(event => { %>
+                  <div class="event-card" style="<%= event.type === 'private' ? 'background:#fff3e0; border-right-color:#ff9800;' : '' %>" onclick="location.href='/center/groups/<%= event.groupId %>'">
+                    <div class="event-time" style="<%= event.type === 'private' ? 'color:#e65100;' : '' %>"><%= event.startTime %> — <%= event.endTime %></div>
+                    <div class="event-name"><%= event.groupName %></div>
+                    <div class="event-type">
+                      <i class='bx bx-<%= event.type === "private" ? "lock-alt" : "globe" %>'></i>
+                      <%= event.type === 'private' ? 'مجموعة خاصة' : 'مجموعة عامة' %>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% }) %>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background: var(--primary);"></div> مجموعة عامة</div>
+        <div class="legend-item"><div class="dot" style="background: #ff9800;"></div> مجموعة خاصة</div>
+      </div>
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+
+</body>
+</html>

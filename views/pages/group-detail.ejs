@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --sidebar-bg: #333; --topbar-bg: #4aa3df; --bg-body: #f0f2f5;
+      --accent: #5cb85c; --danger: #d9534f; --warning: #f0ad4e;
+      --text-main: #333; --text-muted: #6c757d;
+      --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); display: flex; min-height: 100vh; color: var(--text-main); }
+
+    .sidebar { width: 250px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; flex-shrink: 0; min-height: 100vh; }
+    .sidebar .brand { height: 60px; display: flex; align-items: center; gap: 12px; font-size: 1.4rem; font-weight: 700; padding: 0 1.5rem; background: #222; }
+    .sidebar .nav-links { list-style: none; display: flex; flex-direction: column; padding: 1rem 0; flex: 1; }
+    .sidebar .nav-item { display: flex; align-items: center; gap: 12px; padding: 0.85rem 1.5rem; color: #bbb; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; }
+    .sidebar .nav-item:hover, .sidebar .nav-item.active { background: #444; color: white; border-right: 4px solid var(--topbar-bg); }
+    .sidebar .nav-item i { font-size: 1.3rem; }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; justify-content: space-between; font-weight: bold; flex-shrink: 0; }
+    .main-content { padding: 2rem; overflow-y: auto; }
+
+    /* Breadcrumb */
+    .breadcrumb { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--topbar-bg); text-decoration: none; font-weight: 600; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    /* Group Hero */
+    .group-hero { background: linear-gradient(135deg, #4aa3df 0%, #2980b9 100%); border-radius: 16px; padding: 2.5rem; color: white; margin-bottom: 2rem; position: relative; overflow: hidden; }
+    .group-hero.private { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); }
+    .group-hero::after { content: ''; position: absolute; top: -50px; left: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .hero-badge { background: rgba(255,255,255,0.2); padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; backdrop-filter: blur(4px); }
+    .hero-actions { display: flex; gap: 10px; }
+    .btn-hero { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.4); color: white; padding: 0.5rem 1.25rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .btn-hero:hover { background: rgba(255,255,255,0.25); }
+    .btn-hero.danger { border-color: rgba(255,100,100,0.6); color: #ffcdd2; }
+    .btn-hero.danger:hover { background: rgba(220,53,69,0.4); }
+    .hero-name { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .hero-desc { opacity: 0.85; font-size: 0.95rem; }
+    .hero-stats { display: flex; gap: 2rem; margin-top: 1.5rem; }
+    .hero-stat { text-align: center; }
+    .hero-stat .val { font-size: 2rem; font-weight: 800; }
+    .hero-stat .lbl { font-size: 0.8rem; opacity: 0.8; }
+
+    /* Schedule Display */
+    .schedule-card { background: white; border-radius: 14px; box-shadow: var(--card-shadow); padding: 1.5rem; margin-bottom: 2rem; }
+    .card-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+    .card-title i { color: var(--topbar-bg); font-size: 1.3rem; }
+    .schedule-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .sched-chip { background: #e3f2fd; color: #1565c0; padding: 8px 16px; border-radius: 30px; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .sched-chip i { font-size: 1rem; }
+    .no-schedule { color: var(--text-muted); font-style: italic; font-size: 0.9rem; }
+
+    /* Main Two-Column Layout */
+    .detail-grid { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; }
+
+    /* Student Table */
+    .students-card { background: white; border-radius: 14px; box-shadow: var(--card-shadow); overflow: hidden; }
+    .students-card-header { padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
+    .btn-enroll-open { background: var(--topbar-bg); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 1rem 1.5rem; text-align: right; border-bottom: 1px solid #f5f5f5; }
+    .data-table th { background: #fafafa; font-size: 0.82rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+    .data-table tbody tr:hover { background: #f8faff; }
+    .student-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-left: 10px; }
+    .student-name-cell { display: flex; align-items: center; gap: 10px; }
+    .stage-badge { background: #f0f0f0; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+    .btn-remove-student { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; }
+    .btn-remove-student:hover { background: #ffebee; color: var(--danger); }
+    .empty-table { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .empty-table i { font-size: 3rem; display: block; margin-bottom: 0.75rem; opacity: 0.3; }
+
+    /* Add Students Panel */
+    .add-students-card { background: white; border-radius: 14px; box-shadow: var(--card-shadow); overflow: hidden; height: fit-content; position: sticky; top: 2rem; }
+    .add-students-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f0f0; }
+    .search-input { width: 100%; padding: 0.65rem 1rem; border: 1.5px solid #e0e0e0; border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; margin-top: 0.75rem; }
+    .search-input:focus { border-color: var(--topbar-bg); }
+    .all-students-list { max-height: 480px; overflow-y: auto; }
+    .student-list-item { padding: 0.85rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f5f5f5; transition: 0.2s; }
+    .student-list-item:hover { background: #f8faff; }
+    .student-list-item.enrolled { background: #f0fff4; }
+    .s-info { display: flex; align-items: center; gap: 10px; }
+    .s-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+    .s-name { font-weight: 700; font-size: 0.9rem; }
+    .s-stage { font-size: 0.78rem; color: var(--text-muted); }
+    .btn-add-student { background: var(--accent); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .btn-add-student:hover { background: #4cae4c; }
+    .btn-add-student.enrolled { background: #e0e0e0; color: #aaa; cursor: default; pointer-events: none; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 2rem; backdrop-filter: blur(4px); }
+    .modal-card { background: white; width: 100%; max-width: 700px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .modal-header { background: linear-gradient(135deg, #4aa3df, #2980b9); color: white; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h2 { font-size: 1.2rem; font-weight: 800; }
+    .close-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; }
+    .modal-body { padding: 2rem; max-height: 70vh; overflow-y: auto; }
+    .modal-footer { padding: 1.25rem 2rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 1rem; background: #fafafa; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-weight: 700; font-size: 0.85rem; color: #555; }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1.5px solid #e0e0e0; border-radius: 8px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.2s; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--topbar-bg); }
+    .form-section-title { font-weight: 800; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #f0f0f0; margin-top: 1.25rem; }
+    .schedule-row { padding: 0.6rem 0; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.75rem; align-items: center; border-bottom: 1px solid #f5f5f5; }
+    .schedule-row select, .schedule-row input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; width: 100%; }
+    .btn-add-row { background: #e8f5e9; color: var(--accent); border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-remove-row { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.1rem; }
+    .btn-remove-row:hover { color: var(--danger); }
+    .btn-cancel { background: #f0f0f0; color: #555; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; }
+    .btn-save { background: var(--topbar-bg); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'groups' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <span>إدارة المجموعات / <%= group.name %></span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-user'></i> <%= user ? user.firstName : 'المدير' %></div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="/center/groups"><i class='bx bx-collection'></i> المجموعات</a>
+        <i class='bx bx-chevron-left'></i>
+        <span><%= group.name %></span>
+      </div>
+
+      <!-- Group Hero -->
+      <%
+        const dayNames = { saturday:'السبت', sunday:'الأحد', monday:'الإثنين', tuesday:'الثلاثاء', wednesday:'الأربعاء', thursday:'الخميس', friday:'الجمعة' };
+        const enrolledIds = group.students ? group.students.map(s => s.id) : [];
+      %>
+      <div class="group-hero <%= group.type === 'private' ? 'private' : '' %>">
+        <div class="hero-top">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <span class="hero-badge">
+              <%= group.type === 'public' ? '🌐 مجموعة عامة' : '🔒 مجموعة خاصة' %>
+            </span>
+            <% if (group.stage) { %>
+              <%
+                const stageLabel = { primary:'ابتدائى', preparatory:'إعدادى', secondary:'ثانوى' };
+                const gradeLabel = { 1:'الأول', 2:'الثاني', 3:'الثالث', 4:'الرابع', 5:'الخامس', 6:'السادس' };
+                const trackLabel = { scientific:'علمي', literary:'أدبي', general:'عام' };
+              %>
+              <span class="hero-badge" style="background:rgba(255,255,255,0.15);">
+                🎓 الصف <%= gradeLabel[group.grade] || '' %> <%= stageLabel[group.stage] %>
+                <% if (group.stage === 'secondary' && group.track && group.track !== 'general') { %> — <%= trackLabel[group.track] %><% } %>
+              </span>
+            <% } %>
+          </div>
+          <div class="hero-actions">
+            <button class="btn-hero" onclick="openEditModal()">
+              <i class='bx bx-edit'></i> تعديل المجموعة
+            </button>
+            <button class="btn-hero danger" onclick="deleteGroup()">
+              <i class='bx bx-trash'></i> حذف
+            </button>
+          </div>
+        </div>
+        <div class="hero-name"><%= group.name %></div>
+        <div class="hero-desc"><%= group.description || 'لا يوجد وصف لهذه المجموعة' %></div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="val"><%= group.students ? group.students.length : 0 %></div>
+            <div class="lbl">طالب مسجل</div>
+          </div>
+          <div class="hero-stat">
+            <div class="val"><%= group.weeklySchedule ? group.weeklySchedule.length : 0 %></div>
+            <div class="lbl">موعد أسبوعي</div>
+          </div>
+          <div class="hero-stat" style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 1.5rem;">
+            <div class="val" style="color: #69f0ae;"><%= financials.totalRevenue.toLocaleString('ar-EG') %> ج</div>
+            <div class="lbl">تم تحصيله</div>
+          </div>
+          <div class="hero-stat">
+            <div class="val" style="color: #ff9e80;"><%= financials.totalPending.toLocaleString('ar-EG') %> ج</div>
+            <div class="lbl">مستحقات</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule -->
+      <div class="schedule-card">
+        <div class="card-title"><i class='bx bx-calendar-week'></i> مواعيد الأسبوع</div>
+        <% if (group.weeklySchedule && group.weeklySchedule.length > 0) { %>
+          <div class="schedule-grid">
+            <% group.weeklySchedule.forEach(s => { %>
+              <div class="sched-chip">
+                <i class='bx bx-time-five'></i>
+                <%= dayNames[s.day] || s.day %> &nbsp; <%= s.startTime %> — <%= s.endTime %>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="no-schedule">لم يتم تحديد مواعيد أسبوعية لهذه المجموعة بعد. يمكنك التعديل لإضافة مواعيد.</p>
+        <% } %>
+      </div>
+
+      <!-- Main Detail Grid -->
+      <div class="detail-grid">
+
+        <!-- Enrolled Students Table -->
+        <div class="students-card">
+          <div class="students-card-header">
+            <div class="card-title" style="margin:0"><i class='bx bx-group'></i> الطلاب المسجلون</div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>الطالب</th>
+                <th>المرحلة</th>
+                <th>الهاتف</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="enrolledTableBody">
+              <% if (group.students && group.students.length > 0) { %>
+                <% group.students.forEach(student => { %>
+                  <%
+                    const stageMap = { primary: 'ابتدائى', preparatory: 'إعدادى', secondary: 'ثانوى' };
+                    const gradeMap = { 1:'الأول', 2:'الثاني', 3:'الثالث', 4:'الرابع', 5:'الخامس', 6:'السادس' };
+                  %>
+                  <tr id="row-<%= student.id %>">
+                    <td>
+                      <div class="student-name-cell">
+                        <img src="<%= student.photoUrl || 'https://ui-avatars.com/api/?name=' + student.firstName + '+' + student.lastName + '&background=random&size=50' %>" class="student-avatar" alt="">
+                        <div>
+                          <div style="font-weight:700;"><a href="/center/students/<%= student.id %>/profile" style="color:inherit; text-decoration:none;"><%= student.firstName %> <%= student.lastName %></a></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span class="stage-badge"><%= gradeMap[student.grade] %> <%= stageMap[student.stage] %></span></td>
+                    <td style="direction:ltr; font-size:0.9rem;"><%= student.phone || student.parentPhone || '---' %></td>
+                    <td>
+                      <button class="btn-remove-student" onclick="removeStudent(<%= student.id %>, '<%= student.firstName %>')" title="إزالة من المجموعة">
+                        <i class='bx bx-user-minus'></i>
+                      </button>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4">
+                    <div class="empty-table">
+                      <i class='bx bx-group'></i>
+                      لا يوجد طلاب مسجلون في هذه المجموعة بعد.<br>
+                      <small>استخدم اللوحة الجانبية لإضافة طلاب.</small>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add Students Panel -->
+        <div class="add-students-card">
+          <div class="add-students-header">
+            <div class="card-title" style="margin:0"><i class='bx bx-user-plus'></i> إضافة طلاب للمجموعة</div>
+            <input type="text" class="search-input" placeholder="ابحث عن طالب..." oninput="filterStudents(this.value)" id="studentSearch">
+          </div>
+          <div class="all-students-list" id="allStudentsList">
+            <% allStudents.forEach(student => { %>
+              <%
+                const isEnrolled = enrolledIds.includes(student.id);
+                const stageMap2 = { primary: 'ابتدائى', preparatory: 'إعدادى', secondary: 'ثانوى' };
+                const gradeMap2 = { 1:'أول', 2:'ثاني', 3:'ثالث', 4:'رابع', 5:'خامس', 6:'سادس' };
+              %>
+              <div class="student-list-item <%= isEnrolled ? 'enrolled' : '' %>" data-name="<%= student.firstName %> <%= student.lastName %>" id="sitem-<%= student.id %>">
+                <div class="s-info">
+                  <img src="<%= student.photoUrl || 'https://ui-avatars.com/api/?name=' + student.firstName + '+' + student.lastName + '&background=random&size=40' %>" class="s-avatar" alt="">
+                  <div>
+                    <div class="s-name"><%= student.firstName %> <%= student.lastName %></div>
+                    <div class="s-stage"><%= gradeMap2[student.grade] %> <%= stageMap2[student.stage] %></div>
+                  </div>
+                </div>
+                <button class="btn-add-student <%= isEnrolled ? 'enrolled' : '' %>" 
+                        onclick="addStudent(<%= student.id %>, '<%= student.firstName %> <%= student.lastName %>')"
+                        id="addbtn-<%= student.id %>"
+                        title="<%= isEnrolled ? 'مسجل بالفعل' : 'إضافة للمجموعة' %>">
+                  <i class='bx bx-<%= isEnrolled ? "check" : "plus" %>'></i>
+                </button>
+              </div>
+            <% }) %>
+            <% if (allStudents.length === 0) { %>
+              <div style="text-align:center; padding:2rem; color:#aaa;">لا يوجد طلاب مسجلون في المركز</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <!-- Edit Group Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class='bx bx-edit'></i> تعديل بيانات المجموعة</h2>
+        <button class="close-btn" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form id="editGroupForm" onsubmit="handleEdit(event)">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>اسم المجموعة</label>
+              <input type="text" name="name" value="<%= group.name %>" required>
+            </div>
+            <div class="form-group">
+              <label>نوع المجموعة</label>
+              <select name="type">
+                <option value="public" <%= group.type === 'public' ? 'selected' : '' %>>🌐 عامة</option>
+                <option value="private" <%= group.type === 'private' ? 'selected' : '' %>>🔒 خاصة</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>الوصف</label>
+              <textarea name="description" rows="2"><%= group.description || '' %></textarea>
+            </div>
+          </div>
+
+          <div class="form-section-title" style="margin-top:1.25rem;">التفاصيل الدراسية (لفلترة الطلاب)</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>المرحلة الدراسية</label>
+              <select name="stage" id="editGroupStage" onchange="onEditStageChange()">
+                <option value="" <%= !group.stage ? 'selected' : '' %>>— بدون تحديد —</option>
+                <option value="primary" <%= group.stage === 'primary' ? 'selected' : '' %>>الابتدائية</option>
+                <option value="preparatory" <%= group.stage === 'preparatory' ? 'selected' : '' %>>الإعدادية</option>
+                <option value="secondary" <%= group.stage === 'secondary' ? 'selected' : '' %>>الثانوية</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الصف الدراسي</label>
+              <select name="grade" id="editGroupGrade" <%= !group.stage ? 'disabled' : '' %>>
+                <option value="">— اختر —</option>
+                <% if (group.stage === 'primary') { for(let i=1;i<=6;i++) { %>
+                  <option value="<%= i %>" <%= group.grade === i ? 'selected' : '' %>><%= ['','الأول','الثاني','الثالث','الرابع','الخامس','السادس'][i] %> الابتدائي</option>
+                <% }} else if (group.stage === 'preparatory') { for(let i=1;i<=3;i++) { %>
+                  <option value="<%= i %>" <%= group.grade === i ? 'selected' : '' %>><%= ['','الأول','الثاني','الثالث'][i] %> الإعدادي</option>
+                <% }} else if (group.stage === 'secondary') { for(let i=1;i<=3;i++) { %>
+                  <option value="<%= i %>" <%= group.grade === i ? 'selected' : '' %>><%= ['','الأول','الثاني','الثالث'][i] %> الثانوي</option>
+                <% }} %>
+              </select>
+            </div>
+            <div class="form-group" id="editGroupTrackGroup" style="<%= group.stage === 'secondary' ? '' : 'display:none;' %> grid-column: 1 / -1;">
+              <label>الشعبة / المسار</label>
+              <select name="track">
+                <option value="general" <%= (!group.track || group.track === 'general') ? 'selected' : '' %>>عام</option>
+                <option value="scientific" <%= group.track === 'scientific' ? 'selected' : '' %>>علمي</option>
+                <option value="literary" <%= group.track === 'literary' ? 'selected' : '' %>>أدبي</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-section-title" style="margin-top:1.25rem;">مواعيد الأسبوع</div>
+          <div id="editScheduleRows">
+            <% if (group.weeklySchedule) { %>
+              <% group.weeklySchedule.forEach(s => { %>
+                <div class="schedule-row">
+                  <select class="sched-day">
+                    <% ['saturday','sunday','monday','tuesday','wednesday','thursday','friday'].forEach(d => { %>
+                      <option value="<%= d %>" <%= s.day === d ? 'selected' : '' %>><%= {saturday:'السبت', sunday:'الأحد', monday:'الإثنين', tuesday:'الثلاثاء', wednesday:'الأربعاء', thursday:'الخميس', friday:'الجمعة'}[d] %></option>
+                    <% }) %>
+                  </select>
+                  <input type="time" class="sched-start" value="<%= s.startTime %>">
+                  <input type="time" class="sched-end" value="<%= s.endTime %>">
+                  <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()"><i class='bx bx-x'></i></button>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+          <button type="button" class="btn-add-row" onclick="addEditScheduleRow()"><i class='bx bx-plus'></i> إضافة موعد</button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" onclick="closeEditModal()">إلغاء</button>
+          <button type="submit" class="btn-save"><i class='bx bx-check'></i> حفظ التعديلات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const GROUP_ID = <%= group.id %>;
+    const DAYS = [
+      { val: 'saturday', label: 'السبت' }, { val: 'sunday', label: 'الأحد' },
+      { val: 'monday', label: 'الإثنين' }, { val: 'tuesday', label: 'الثلاثاء' },
+      { val: 'wednesday', label: 'الأربعاء' }, { val: 'thursday', label: 'الخميس' },
+      { val: 'friday', label: 'الجمعة' },
+    ];
+
+    // ── Student Management ─────────────────────────────────────────────────────
+    async function addStudent(studentId, name) {
+      const btn = document.getElementById(`addbtn-${studentId}`);
+      try {
+        const res = await fetch(`/api/v1/groups/${GROUP_ID}/students`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentId }),
+        });
+        if (res.ok) {
+          btn.innerHTML = `<i class='bx bx-check'></i>`;
+          btn.classList.add('enrolled');
+          document.getElementById(`sitem-${studentId}`).classList.add('enrolled');
+          await Swal.fire({
+            title: 'تمت الإضافة',
+            text: `تم إضافة ${name} إلى المجموعة بنجاح`,
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          location.reload();
+        } else {
+          const err = await res.json();
+          Swal.fire('خطأ!', err.message || 'فشل إضافة الطالب للمجموعة', 'error');
+        }
+      } catch (err) {
+        Swal.fire('خطأ!', 'حدث خطأ فني أثناء إضافة الطالب', 'error');
+      }
+    }
+
+    async function removeStudent(studentId, name) {
+      const result = await Swal.fire({
+        title: 'إزالة طالب؟',
+        text: `هل أنت متأكد من إزالة "${name}" من هذه المجموعة؟`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'نعم، إزالة',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/v1/groups/${GROUP_ID}/students`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId }),
+          });
+          if (res.ok) {
+            Swal.fire({ title: 'تمت الإزالة', icon: 'success', timer: 1000, showConfirmButton: false });
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            const err = await res.json();
+            Swal.fire('خطأ!', err.message || 'فشل إزالة الطالب', 'error');
+          }
+        } catch (err) {
+          Swal.fire('خطأ!', 'حدث خطأ فني', 'error');
+        }
+      }
+    }
+
+    function filterStudents(query) {
+      const items = document.querySelectorAll('.student-list-item');
+      items.forEach(item => {
+        const name = item.dataset.name.toLowerCase();
+        item.style.display = name.includes(query.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    // ── Group Delete ───────────────────────────────────────────────────────────
+    async function deleteGroup() {
+      const result = await Swal.fire({
+        title: 'حذف المجموعة نهائياً؟',
+        text: 'سيتم مسح جميع بيانات المجموعة وإزالة الطلاب منها. لا يمكن التراجع عن هذا الإجراء!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ff0000',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'نعم، احذف الآن',
+        cancelButtonText: 'تراجع',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/v1/groups/${GROUP_ID}`, { method: 'DELETE' });
+          if (res.ok) {
+            await Swal.fire({ title: 'تم الحذف', text: 'تم حذف المجموعة بنجاح', icon: 'success' });
+            location.href = '/center/groups';
+          } else {
+            const err = await res.json();
+            Swal.fire('خطأ!', err.message || 'فشل الحذف', 'error');
+          }
+        } catch (err) {
+          Swal.fire('خطأ!', 'حدث خطأ فني', 'error');
+        }
+      }
+    }
+
+    // ── Edit Modal ─────────────────────────────────────────────────────────────
+    function openEditModal() { document.getElementById('editModal').style.display = 'flex'; }
+    function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+    const GRADES = { primary: 6, preparatory: 3, secondary: 3 };
+    const GRADE_NAMES = ['','الأول','الثاني','الثالث','الرابع','الخامس','السادس'];
+    const STAGE_LABELS = { primary:'الابتدائي', preparatory:'الإعدادي', secondary:'الثانوي' };
+
+    function onEditStageChange() {
+      const stage = document.getElementById('editGroupStage').value;
+      const gradeSelect = document.getElementById('editGroupGrade');
+      const trackGroup = document.getElementById('editGroupTrackGroup');
+
+      gradeSelect.innerHTML = '<option value="">— اختر الصف —</option>';
+      gradeSelect.disabled = !stage;
+      trackGroup.style.display = 'none';
+
+      if (stage && GRADES[stage]) {
+        for (let i = 1; i <= GRADES[stage]; i++) {
+          gradeSelect.innerHTML += `<option value="${i}">${GRADE_NAMES[i]} ${STAGE_LABELS[stage]}</option>`;
+        }
+      }
+      if (stage === 'secondary') trackGroup.style.display = 'flex';
+    }
+
+    function addEditScheduleRow() {
+      const container = document.getElementById('editScheduleRows');
+      const div = document.createElement('div');
+      div.className = 'schedule-row';
+      const opts = DAYS.map(d => `<option value="${d.val}">${d.label}</option>`).join('');
+      div.innerHTML = `
+        <select class="sched-day">${opts}</select>
+        <input type="time" class="sched-start" value="09:00">
+        <input type="time" class="sched-end" value="11:00">
+        <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()"><i class='bx bx-x'></i></button>
+      `;
+      container.appendChild(div);
+    }
+
+    function buildScheduleFrom(containerId) {
+      return Array.from(document.querySelectorAll(`#${containerId} .schedule-row`)).map(row => ({
+        day: row.querySelector('.sched-day').value,
+        startTime: row.querySelector('.sched-start').value,
+        endTime: row.querySelector('.sched-end').value,
+      }));
+    }
+
+    async function handleEdit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        description: form.description.value || undefined,
+        type: form.type.value,
+        weeklySchedule: buildScheduleFrom('editScheduleRows'),
+      };
+      // Academic fields
+      if (form.stage.value) {
+        data.stage = form.stage.value;
+        if (form.grade.value) data.grade = parseInt(form.grade.value);
+        if (form.stage.value === 'secondary' && form.track) data.track = form.track.value;
+      } else {
+        data.stage = null;
+        data.grade = null;
+        data.track = null;
+      }
+      const res = await fetch(`/api/v1/groups/${GROUP_ID}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) location.reload();
+      else { const err = await res.json(); alert(err.message || 'حدث خطأ'); }
+    }
+  </script>
+
+</body>
+</html>

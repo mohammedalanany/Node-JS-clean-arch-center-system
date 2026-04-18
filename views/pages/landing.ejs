@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #ec4899;
+      --bg-dark: #0f172a;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Abstract shapes in the background */
+    .bg-shape-1 {
+      position: absolute; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, transparent 70%);
+      top: -200px; right: -200px; z-index: 0; pointer-events: none;
+    }
+    .bg-shape-2 {
+      position: absolute; width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
+      bottom: -300px; left: -200px; z-index: 0; pointer-events: none;
+    }
+
+    /* Navbar */
+    header {
+      padding: 1.5rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.75rem;
+      font-weight: 900;
+      background: linear-gradient(to left, #818cf8, #e879f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+
+    .nav-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: white;
+      padding: 0.6rem 1.5rem;
+      border-radius: 99px;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
+      text-decoration: none;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+
+    .nav-btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .nav-btn-primary:hover { background: var(--primary-hover); }
+
+    /* Hero Section */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      padding: 0 5%;
+      margin-top: 2rem;
+    }
+
+    .hero-badge {
+      background: rgba(236, 72, 153, 0.1);
+      color: #f472b6;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      padding: 0.5rem 1rem;
+      border-radius: 99px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      max-width: 900px;
+      background: linear-gradient(to bottom, #ffffff, #a5b4fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      line-height: 1.6;
+      margin-bottom: 3rem;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .hero-btn {
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-login {
+      background: linear-gradient(to left, var(--primary), #8b5cf6);
+      color: white;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+    }
+    .btn-login:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(79, 70, 229, 0.6); }
+
+    .btn-outline {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: white;
+    }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
+
+    /* Features Grid under Hero */
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 5rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 10;
+    }
+
+    .feature-card {
+      background: rgba(30, 41, 59, 0.4);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: 0.3s;
+    }
+    .feature-card:hover { transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.2); }
+
+    .feature-icon {
+      width: 45px; height: 45px;
+      background: rgba(79, 70, 229, 0.2);
+      color: #818cf8;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; font-size: 1.5rem;
+    }
+
+    .feature-text h4 { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .feature-text p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      .hero p { font-size: 1rem; }
+      .hero-buttons { flex-direction: column; width: 100%; max-width: 300px; }
+      .hero-btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Abstract Background Elements -->
+  <div class="bg-shape-1"></div>
+  <div class="bg-shape-2"></div>
+
+  <!-- Navbar -->
+  <header>
+    <a href="/" class="logo">
+      <i class='bx bxs-graduation'></i> <span>EduSaaS</span>
+    </a>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">🚀 النظام التقني الأحدث للإدارة التعليمية</div>
+    <h1>أدر مركزك التعليمي باحترافية وذكاء غير مسبوق.</h1>
+    <p>منصة سحابية متكاملة تتيح لك إدارة فروعك، تسجيل طلابك، متابعة المدفوعات، وإصدار تقارير دقيقة بضغطة زر واحدة. بوابتك لتحويل السنتر الخاص بك إلى كيان رقمي متطور.</p>
+    
+    <div class="hero-buttons">
+      <a href="/student/login" class="hero-btn btn-login" style="background: linear-gradient(to left, #10b981, #059669);">
+        بوابة الطالب <i class='bx bx-user'></i>
+      </a>
+      <a href="/center/login" class="hero-btn btn-login" style="background: linear-gradient(to left, #3b82f6, #2563eb);">
+        دخول السنتر <i class='bx bxs-buildings'></i>
+      </a>
+      <a href="/superadmin/login" class="hero-btn btn-outline" style="border-color: #ec4899; color: #ec4899;">
+        دخول الإدارة العامة <i class='bx bx-shield-quarter'></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- Quick Features -->
+  <section class="features" id="features">
+    <div class="feature-card">
+      <div class="feature-icon"><i class='bx bx-layer'></i></div>
+      <div class="feature-text">
+        <h4>متعدد الفروع (SaaS)</h4>
+        <p>إدارة مراكز مستقلة تماماً ببياناتها.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background: rgba(16, 185, 129, 0.2); color: #34d399;"><i class='bx bx-user-check'></i></div>
+      <div class="feature-text">
+        <h4>بوابة موحدة</h4>
+        <p>رابط واحد لدخول كافة المدراء والمسؤولين.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;"><i class='bx bx-data'></i></div>
+      <div class="feature-text">
+        <h4>سرعة وأمان</h4>
+        <p>قواعد بيانات معزولة وحماية مشفرة.</p>
+      </div>
+    </div>
+  </section>
+
+
+</body>
+</html>

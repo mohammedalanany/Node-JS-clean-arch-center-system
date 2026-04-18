@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary: #4aa3df; --primary-dark: #2980b9; --accent: #6c5ce7;
+      --success: #2ecc71; --danger: #e74c3c; --warning: #f1c40f;
+      --bg-body: #f8fafc; --text-main: #2d3436; --text-muted: #636e72;
+      --card-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; min-height: 100vh; }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+    .main-content { padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+    /* Header & Stats */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+    .header-title h1 { font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+    .header-title p { color: var(--text-muted); margin-top: 4px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 1.25rem; border-right: 4px solid var(--primary); }
+    .stat-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(74, 163, 223, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .stat-info h3 { font-size: 1.4rem; font-weight: 800; }
+    .stat-info p { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* Toolbar */
+    .toolbar { background: white; padding: 1.25rem; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .search-box { flex: 1; position: relative; min-width: 250px; }
+    .search-box i { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem; }
+    .search-box input { width: 100%; padding: 0.75rem 2.8rem 0.75rem 1rem; border: 2px solid #edf2f7; border-radius: 10px; outline: none; transition: 0.2s; font-family: inherit; }
+    .search-box input:focus { border-color: var(--primary); }
+
+    /* Exam Cards */
+    .exams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .exam-card { background: white; border-radius: 20px; box-shadow: var(--card-shadow); overflow: hidden; transition: 0.3s; position: relative; border: 1px solid rgba(0,0,0,0.02); }
+    .exam-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+    
+    .exam-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 1.5rem; color: white; position: relative; }
+    .exam-badge { position: absolute; left: 1.25rem; top: 1.25rem; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; backdrop-filter: blur(4px); }
+    .exam-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; }
+    .exam-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; opacity: 0.9; }
+
+    .exam-body { padding: 1.5rem; }
+    .exam-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .meta-item { display: flex; flex-direction: column; }
+    .meta-item .lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 2px; }
+    .meta-item .val { font-size: 1rem; font-weight: 800; color: var(--text-main); }
+    
+    .exam-footer { padding: 1rem 1.5rem; background: #fafafa; border-top: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; }
+    .actions { display: flex; gap: 8px; }
+    .action-btn { width: 38px; height: 38px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s; background: white; border: 1.5px solid #edf2f7; color: var(--text-muted); }
+    .action-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .action-btn.danger:hover { background: var(--danger); color: white; border-color: var(--danger); }
+    .btn-results { background: var(--accent); color: white; padding: 0.6rem 1rem; border-radius: 8px; border: none; font-weight: 800; font-size: 0.85rem; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px; width: 100%; max-width: 550px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.2); transform: scale(0.9); transition: 0.3s; }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { padding: 1.5rem 2rem; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h2 { font-size: 1.25rem; font-weight: 800; }
+    .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-muted); }
+    .modal-body { padding: 2rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; }
+    .form-control { width: 100%; padding: 0.85rem 1rem; border: 2px solid #edf2f7; border-radius: 10px; font-family: inherit; font-size: 1rem; outline: none; transition: 0.2s; }
+    .form-control:focus { border-color: var(--primary); }
+    .modal-footer { padding: 1.25rem 2rem; background: #fafafa; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 1rem; }
+
+    .empty-state { text-align: center; padding: 4rem 2rem; background: white; border-radius: 20px; box-shadow: var(--card-shadow); }
+    .empty-state i { font-size: 5rem; color: #dfe6e9; margin-bottom: 1rem; display: block; }
+    .empty-state h2 { font-weight: 800; margin-bottom: 0.5rem; }
+    .empty-state p { color: var(--text-muted); margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'exams' }) %>
+
+  <div class="wrapper">
+    <header style="height: 60px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; padding: 0 2rem; justify-content: space-between;">
+      <div style="font-weight: 800;"><i class='bx bx-book-content' style="color:var(--primary);"></i> إدارة الاختبارات</div>
+      <div style="font-size: 0.9rem; color: var(--text-muted);"><%= user.firstName %> | لوحة تحكم السنتر</div>
+    </header>
+
+    <main class="main-content">
+      <div class="page-header">
+        <div class="header-title">
+          <h1><i class='bx bx-award' style="color:var(--accent);"></i> الاختبارات الدورية</h1>
+          <p>تابع نتائج الطلاب ومستواهم الأكاديمي عبر الامتحانات المختلفة</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <i class='bx bx-plus'></i> إنشاء اختبار جديد
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i class='bx bx-receipt'></i></div>
+          <div class="stat-info">
+            <h3><%= exams.length %></h3>
+            <p>إجمالي الاختبارات</p>
+          </div>
+        </div>
+        <div class="stat-card" style="border-right-color: var(--accent);">
+          <div class="stat-icon" style="color:var(--accent); background:rgba(108, 92, 231, 0.1);"><i class='bx bx-user-check'></i></div>
+          <div class="stat-info">
+            <h3>---</h3>
+            <p>اختبارات تم رصدها</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <i class='bx bx-search'></i>
+          <input type="text" id="examSearch" placeholder="ابحث عن اسم اختبار..." oninput="filterExams(this.value)">
+        </div>
+        <select class="form-control" style="width: auto; margin-right: 0.5rem;" onchange="filterByGroup(this.value)">
+          <option value="">كل المجموعات</option>
+          <% groups.forEach(g => { %>
+          <option value="<%= g.id %>"><%= g.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <% if (exams.length === 0) { %>
+        <div class="empty-state">
+          <i class='bx bx-folder-open'></i>
+          <h2>لا توجد اختبارات بعد</h2>
+          <p>ابدأ بإنشاء أول اختبار دوري لطلاب السنتر الآن</p>
+          <button class="btn btn-primary" style="margin: 0 auto;" onclick="openAddModal()">
+            <i class='bx bx-plus'></i> إضافة اختبار
+          </button>
+        </div>
+      <% } else { %>
+        <div class="exams-grid" id="examsList">
+          <% exams.forEach(exam => { %>
+            <div class="exam-card" data-title="<%= exam.title %>" data-group="<%= exam.groupId || '' %>">
+              <div class="exam-header">
+                <% if (exam.groupId) { %>
+                  <span class="exam-badge">خاص بالمجموعة</span>
+                <% } else { %>
+                  <span class="exam-badge" style="background:#2ecc71;">عام للكل</span>
+                <% } %>
+                <div class="exam-title text-truncate"><%= exam.title %></div>
+                <div class="exam-group">
+                  <i class='bx bx-group'></i>
+                  <%= exam.group ? exam.group.name : 'كافة طلاب المركز' %>
+                </div>
+              </div>
+              <div class="exam-body">
+                <div class="exam-meta">
+                  <div class="meta-item">
+                    <span class="lbl">الدرجة النهائية</span>
+                    <span class="val"><%= Number(exam.totalMarks) %> درجة</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="lbl">تاريخ الامتحان</span>
+                    <span class="val"><%= new Date(exam.date).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' }) %></span>
+                  </div>
+                </div>
+                <% if (exam.notes) { %>
+                  <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
+                    <i class='bx bx-info-circle'></i> <%= exam.notes %>
+                  </p>
+                <% } %>
+              </div>
+              <div class="exam-footer">
+                <div class="actions">
+                  <button class="action-btn" title="تعديل"><i class='bx bx-edit-alt'></i></button>
+                  <button class="action-btn danger" title="حذف" onclick="deleteExam(<%= exam.id %>)"><i class='bx bx-trash'></i></button>
+                </div>
+                <button class="btn-results" onclick="location.href='/center/exams/<%= exam.id %>'">
+                  رصد النتائج <i class='bx bx-chevron-left'></i>
+                </button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <!-- Modal: Create Exam -->
+  <div class="modal-overlay" id="examModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>إنشاء اختبار جديد</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="examForm" onsubmit="handleCreate(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>عنوان الاختبار *</label>
+            <input type="text" name="title" class="form-control" placeholder="مثال: اختبار شهر مارس" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>الدرجة النهائية *</label>
+              <input type="number" name="totalMarks" class="form-control" value="20" required>
+            </div>
+            <div class="form-group">
+              <label>التاريخ *</label>
+              <input type="date" name="date" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>المجموعة المستهدفة</label>
+            <select name="groupId" class="form-control">
+              <option value="">كافة طلاب المركز (اختبار عام)</option>
+              <% groups.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ملاحظات (اختياري)</label>
+            <textarea name="notes" class="form-control" rows="2" style="resize: none;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+          <button type="submit" class="btn btn-primary">حفظ الاختبار</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddModal() {
+      const modal = document.getElementById('examModal');
+      modal.classList.add('open');
+      document.querySelector('input[name="date"]').value = new Date().toISOString().split('T')[0];
+    }
+    function closeModal() {
+      document.getElementById('examModal').classList.remove('open');
+    }
+
+    async function handleCreate(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        title: form.title.value,
+        totalMarks: Number(form.totalMarks.value),
+        date: form.date.value,
+        groupId: form.groupId.value || null,
+        notes: form.notes.value
+      };
+
+      try {
+        const res = await fetch('/api/v1/exams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          Swal.fire({ title: 'تم!', text: 'تم إنشاء الاختبار بنجاح', icon: 'success', showConfirmButton: false, timer: 1500 });
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          const err = await res.json();
+          Swal.fire('خطأ', err.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('خطأ', 'فشل الإرسال', 'error');
+      }
+    }
+
+    async function deleteExam(id) {
+      const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: "سيتم حذف سجل الامتحان وجميع الدرجات المرصودة له!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'تراجع',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        const res = await fetch(`/api/v1/exams/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          Swal.fire('تم!', 'تم حذف الامتحان', 'success');
+          location.reload();
+        }
+      }
+    }
+
+    function filterExams(query) {
+      const cards = document.querySelectorAll('.exam-card');
+      cards.forEach(card => {
+        const title = card.dataset.title.toLowerCase();
+        card.style.display = title.includes(query.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    function filterByGroup(groupId) {
+      const cards = document.querySelectorAll('.exam-card');
+      cards.forEach(card => {
+        if (!groupId) card.style.display = '';
+        else card.style.display = card.dataset.group === groupId ? '' : 'none';
+      });
+    }
+  </script>
+
+</body>
+</html>

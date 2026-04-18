@@ -1,0 +1,58 @@
+<style>
+  .ads-sidebar {
+    width: 270px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 2rem;
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    .ads-sidebar {
+      display: none;
+    }
+  }
+
+  .ad-card {
+    background: #fcfcfc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    transition: transform 0.2s;
+  }
+  .ad-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+
+  .ad-card h4 { font-size: 0.9rem; font-weight: 800; color: #1f2937; margin-bottom: 0.4rem; }
+  .ad-card p { font-size: 0.75rem; color: #6b7280; line-height: 1.4; margin-bottom: 0.75rem; }
+  .ad-img { width: 100%; height: 90px; background-color: #f3f4f6; border-radius: 6px; margin-bottom: 0.75rem; background-size: cover; background-position: center; }
+  .ad-btn { background: #4aa3df; color: white; display: block; text-align: center; text-decoration: none; font-size: 0.8rem; font-weight: bold; padding: 0.4rem; border-radius: 6px; transition: 0.3s; }
+  .ad-btn:hover { background: #3b82f6; opacity: 0.9; }
+</style>
+
+<aside class="ads-sidebar">
+  
+  <div style="font-weight: 800; font-size: 1.15rem; margin-bottom: 1.0rem; color: var(--primary, #4aa3df); border-bottom: 2px solid #f3f4f6; padding-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;">
+    <i class='bx bxs-megaphone' style="font-size: 1.3rem;"></i> الإعلانات والخدمات
+  </div>
+  
+  <% if (typeof systemAds !== 'undefined' && systemAds.length > 0) { %>
+    <% systemAds.forEach(ad => { %>
+    <div class="ad-card">
+      <div class="ad-img" style="background-image: url('<%= ad.imageUrl %>');"></div>
+      <h4><%= ad.title %></h4>
+      <p><%= ad.description %></p>
+      <a href="<%= ad.link %>" target="_blank" class="ad-btn"><i class='bx bx-link-external'></i> تصفح الآن</a>
+    </div>
+    <% }) %>
+  <% } else { %>
+    <div style="text-align: center; margin-top: 1rem; color: #9ca3af; font-size: 0.85rem;">
+      <i class='bx bx-info-circle' style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+      لا توجد إعلانات حالياً
+    </div>
+  <% } %>
+
+</aside>

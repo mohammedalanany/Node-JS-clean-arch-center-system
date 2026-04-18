@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --sidebar-bg: #333333; --topbar-bg: #4aa3df; --bg-body: #f0f2f5;
+      --accent: #5cb85c; --danger: #d9534f; --warning: #f0ad4e;
+      --text-main: #333; --text-muted: #6c757d;
+      --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Cairo', sans-serif; 
+      background: linear-gradient(135deg, #f0f2f5 0%, #e0e6ed 100%);
+      background-attachment: fixed;
+      display: flex; 
+      min-height: 100vh; 
+      color: var(--text-main); 
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234aa3df' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      z-index: -1;
+    }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; justify-content: space-between; font-weight: bold; flex-shrink: 0; }
+    .main-content { padding: 2rem; overflow-y: auto; }
+
+    /* Header */
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; }
+    .btn-primary { background: var(--topbar-bg); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; transition: 0.3s; }
+    .btn-primary:hover { background: #3a93cf; transform: translateY(-2px); }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 1rem; }
+    .stat-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .stat-val { font-size: 1.8rem; font-weight: 800; }
+    .stat-lbl { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* Groups Grid */
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .group-card { background: white; border-radius: 14px; box-shadow: var(--card-shadow); overflow: hidden; transition: 0.3s; }
+    .group-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+
+    .group-card-header { padding: 1.5rem; background: linear-gradient(135deg, #4aa3df 0%, #2980b9 100%); color: white; position: relative; }
+    .group-card-header.private { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); }
+    .group-type-badge { position: absolute; top: 1rem; left: 1rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; backdrop-filter: blur(4px); }
+    .group-icon { width: 54px; height: 54px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 0.75rem; }
+    .group-card-header h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .group-card-header p { font-size: 0.85rem; opacity: 0.85; }
+
+    .group-card-body { padding: 1.25rem 1.5rem; }
+    .schedule-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+    .chip { background: #f0f2f5; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 5px; }
+    .chip i { color: var(--topbar-bg); }
+
+    .group-meta { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f0f0f0; padding-top: 1rem; }
+    .student-count { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-main); }
+    .student-count span { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+    .card-actions { display: flex; gap: 8px; }
+    .btn-detail { background: var(--topbar-bg); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none; }
+    .btn-detail:hover { opacity: 0.9; }
+    .btn-delete-card { background: #ffebee; color: var(--danger); border: none; padding: 0.5rem; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    .btn-delete-card:hover { background: var(--danger); color: white; }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 5rem 2rem; background: white; border-radius: 14px; box-shadow: var(--card-shadow); }
+    .empty-state i { font-size: 5rem; color: #ddd; display: block; margin-bottom: 1rem; }
+    .empty-state h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .empty-state p { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 2rem; backdrop-filter: blur(4px); }
+    .modal-card { background: white; width: 100%; max-width: 700px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .modal-header { background: linear-gradient(135deg, #4aa3df, #2980b9); color: white; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h2 { font-size: 1.2rem; font-weight: 800; }
+    .close-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+    .modal-body { padding: 2rem; max-height: 75vh; overflow-y: auto; }
+    .modal-footer { padding: 1.25rem 2rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 1rem; background: #fafafa; }
+
+    .form-section { margin-bottom: 1.5rem; }
+    .form-section-title { font-weight: 800; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #f0f0f0; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .form-grid.col-1 { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-weight: 700; font-size: 0.85rem; color: #555; }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1.5px solid #e0e0e0; border-radius: 8px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.2s; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--topbar-bg); box-shadow: 0 0 0 3px rgba(74,163,223,0.15); }
+
+    /* Schedule Builder */
+    .schedule-builder { border: 1.5px solid #e0e0e0; border-radius: 10px; overflow: hidden; }
+    .schedule-builder-header { background: #f8f9fa; padding: 0.75rem 1rem; font-weight: 700; font-size: 0.85rem; color: #555; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: center; }
+    .schedule-row { padding: 0.75rem 1rem; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: center; border-top: 1px solid #f0f0f0; }
+    .schedule-row select, .schedule-row input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem; width: 100%; }
+    .btn-add-row { background: #e8f5e9; color: var(--accent); border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .btn-add-row:hover { background: var(--accent); color: white; }
+    .btn-remove-row { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.2rem; padding: 0; transition: 0.2s; }
+    .btn-remove-row:hover { color: var(--danger); }
+
+    .btn-cancel { background: #f0f0f0; color: #555; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; transition: 0.2s; }
+    .btn-save { background: var(--topbar-bg); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; transition: 0.2s; }
+    .btn-save:hover { background: #3a93cf; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'groups' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <span>إدارة المجموعات الدراسية</span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-user'></i> <%= user ? user.firstName : 'المدير' %></div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1>المجموعات الدراسية</h1>
+        <button class="btn-primary" onclick="openAddModal()">
+          <i class='bx bx-plus'></i> إنشاء مجموعة جديدة
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#e3f2fd; color:#1976d2;"><i class='bx bx-collection'></i></div>
+          <div>
+            <div class="stat-val"><%= groups.length %></div>
+            <div class="stat-lbl">إجمالي المجموعات</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#e8f5e9; color:#388e3c;"><i class='bx bx-globe'></i></div>
+          <div>
+            <div class="stat-val"><%= groups.filter(g => g.type === 'public').length %></div>
+            <div class="stat-lbl">مجموعات عامة</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fff3e0; color:#f57c00;"><i class='bx bx-lock'></i></div>
+          <div>
+            <div class="stat-val"><%= groups.filter(g => g.type === 'private').length %></div>
+            <div class="stat-lbl">مجموعات خاصة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Groups Grid -->
+      <% if (groups && groups.length > 0) { %>
+        <div class="groups-grid">
+          <% 
+            const gradients = [
+              'linear-gradient(135deg, #4aa3df 0%, #2980b9 100%)', // Blue
+              'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Purple
+              'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)', // Green
+              'linear-gradient(135deg, #f83600 0%, #fe8c00 100%)', // Orange
+              'linear-gradient(135deg, #e91e63 0%, #f44336 100%)', // Pink/Red
+              'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', // Ocean Blue
+              'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)', // Deep Purple
+              'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', // Emerald
+            ];
+          %>
+          <% groups.forEach((group, index) => { %>
+            <%
+              const dayNames = { saturday:'السبت', sunday:'الأحد', monday:'الإثنين', tuesday:'الثلاثاء', wednesday:'الأربعاء', thursday:'الخميس', friday:'الجمعة' };
+              const cardGradient = gradients[index % gradients.length];
+            %>
+            <div class="group-card">
+              <div class="group-card-header" style="background: <%= cardGradient %>">
+                <span class="group-type-badge">
+                  <% if (group.type === 'public') { %><i class='bx bx-globe'></i> عام<% } else { %><i class='bx bx-lock'></i> خاص<% } %>
+                </span>
+                <div class="group-icon"><i class='bx bx-chalkboard'></i></div>
+                <h3><%= group.name %></h3>
+                <p style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"><%= group.description || 'لا يوجد وصف متاح لهذه المجموعة' %></p>
+              </div>
+              <div class="group-card-body">
+                <% if (group.weeklySchedule && group.weeklySchedule.length > 0) { %>
+                  <div class="schedule-chips">
+                    <% group.weeklySchedule.forEach(s => { %>
+                      <div class="chip">
+                        <i class='bx bx-time'></i>
+                        <%= dayNames[s.day] || s.day %> <%= s.startTime %>–<%= s.endTime %>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <p style="color:#bbb; font-size:0.85rem; margin-bottom:1rem;">لم يتم تحديد مواعيد بعد</p>
+                <% } %>
+                <div class="group-meta">
+                  <div class="student-count">
+                    <i class='bx bx-group' style="font-size:1.3rem; color:var(--topbar-bg);"></i>
+                    <%= group.students ? group.students.length : 0 %>
+                    <span>طالب مسجل</span>
+                  </div>
+                  <div class="card-actions">
+                    <a href="/center/groups/<%= group.id %>" class="btn-detail">
+                      <i class='bx bx-cog'></i> إدارة
+                    </a>
+                    <button class="btn-delete-card" onclick="deleteGroup(<%= group.id %>, '<%= group.name %>')" title="حذف المجموعة">
+                      <i class='bx bx-trash'></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <i class='bx bx-collection'></i>
+          <h3>لا توجد مجموعات دراسية بعد</h3>
+          <p>ابدأ بإنشاء مجموعة لتنظيم الطلاب وضبط المواعيد والجداول</p>
+          <button class="btn-primary" onclick="openAddModal()"><i class='bx bx-plus'></i> إنشاء أول مجموعة</button>
+        </div>
+      <% } %>
+
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <!-- Add Group Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class='bx bx-plus-circle'></i> إنشاء مجموعة دراسية جديدة</h2>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="addGroupForm" onsubmit="handleAddGroup(event)">
+        <div class="modal-body">
+
+          <div class="form-section">
+            <div class="form-section-title">المعلومات الأساسية</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>اسم المجموعة *</label>
+                <input type="text" name="name" placeholder="مثال: مجموعة الأولى - رياضيات" required>
+              </div>
+              <div class="form-group">
+                <label>نوع المجموعة *</label>
+                <select name="type" required>
+                  <option value="public">🌐 عامة - مفتوحة لجميع الطلاب</option>
+                  <option value="private">🔒 خاصة - بدعوة فقط</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>وصف المجموعة (اختياري)</label>
+                <textarea name="description" rows="2" placeholder="أضف وصفاً مختصراً للمجموعة..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">التفاصيل الدراسية (لفلترة الطلاب)</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>المرحلة الدراسية</label>
+                <select name="stage" id="groupStageSelect" onchange="onGroupStageChange()">
+                  <option value="">— بدون تحديد (كل المراحل) —</option>
+                  <option value="primary">الابتدائية</option>
+                  <option value="preparatory">الإعدادية</option>
+                  <option value="secondary">الثانوية</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>الصف الدراسي</label>
+                <select name="grade" id="groupGradeSelect" disabled>
+                  <option value="">— اختر المرحلة أولاً —</option>
+                </select>
+              </div>
+              <div class="form-group" id="groupTrackGroup" style="display:none; grid-column: 1 / -1;">
+                <label>الشعبة / المسار</label>
+                <select name="track">
+                  <option value="general">عام (الأول الثانوي)</option>
+                  <option value="scientific">علمي</option>
+                  <option value="literary">أدبي</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">مواعيد الأسبوع</div>
+            <div class="schedule-builder" id="scheduleBuilder">
+              <div class="schedule-builder-header">
+                <span>اليوم</span>
+                <span>وقت البداية</span>
+                <span>وقت النهاية</span>
+                <span></span>
+              </div>
+              <div id="scheduleRows">
+                <!-- rows injected by JS -->
+              </div>
+            </div>
+            <button type="button" class="btn-add-row" onclick="addScheduleRow()">
+              <i class='bx bx-plus'></i> إضافة موعد
+            </button>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" onclick="closeModal()">إلغاء</button>
+          <button type="submit" class="btn-save"><i class='bx bx-check'></i> حفظ المجموعة</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const DAYS = [
+      { val: 'saturday',  label: 'السبت' },
+      { val: 'sunday',    label: 'الأحد' },
+      { val: 'monday',    label: 'الإثنين' },
+      { val: 'tuesday',   label: 'الثلاثاء' },
+      { val: 'wednesday', label: 'الأربعاء' },
+      { val: 'thursday',  label: 'الخميس' },
+      { val: 'friday',    label: 'الجمعة' },
+    ];
+
+    const GRADES = { primary: 6, preparatory: 3, secondary: 3 };
+    const GRADE_NAMES = ['','الأول','الثاني','الثالث','الرابع','الخامس','السادس'];
+    const STAGE_LABELS = { primary:'الابتدائي', preparatory:'الإعدادي', secondary:'الثانوي' };
+
+    function onGroupStageChange() {
+      const stage = document.getElementById('groupStageSelect').value;
+      const gradeSelect = document.getElementById('groupGradeSelect');
+      const trackGroup = document.getElementById('groupTrackGroup');
+
+      gradeSelect.innerHTML = '<option value="">— اختر الصف —</option>';
+      gradeSelect.disabled = !stage;
+      trackGroup.style.display = 'none';
+
+      if (stage && GRADES[stage]) {
+        for (let i = 1; i <= GRADES[stage]; i++) {
+          gradeSelect.innerHTML += `<option value="${i}">${GRADE_NAMES[i]} ${STAGE_LABELS[stage]}</option>`;
+        }
+      }
+      if (stage === 'secondary') trackGroup.style.display = 'flex';
+    }
+
+    function openAddModal() {
+      document.getElementById('addModal').style.display = 'flex';
+      document.getElementById('scheduleRows').innerHTML = '';
+      document.getElementById('addGroupForm').reset();
+      // reset grade/track
+      document.getElementById('groupGradeSelect').innerHTML = '<option value="">— اختر المرحلة أولاً —</option>';
+      document.getElementById('groupGradeSelect').disabled = true;
+      document.getElementById('groupTrackGroup').style.display = 'none';
+      addScheduleRow();
+    }
+    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+
+    function addScheduleRow() {
+      const container = document.getElementById('scheduleRows');
+      const div = document.createElement('div');
+      div.className = 'schedule-row';
+      const dayOptions = DAYS.map(d => `<option value="${d.val}">${d.label}</option>`).join('');
+      div.innerHTML = `
+        <select class="sched-day">${dayOptions}</select>
+        <input type="time" class="sched-start" value="09:00">
+        <input type="time" class="sched-end" value="11:00">
+        <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()"><i class='bx bx-x'></i></button>
+      `;
+      container.appendChild(div);
+    }
+
+    function buildSchedule() {
+      const rows = document.querySelectorAll('#scheduleRows .schedule-row');
+      return Array.from(rows).map(row => ({
+        day: row.querySelector('.sched-day').value,
+        startTime: row.querySelector('.sched-start').value,
+        endTime: row.querySelector('.sched-end').value,
+      }));
+    }
+
+    async function handleAddGroup(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        description: form.description.value || undefined,
+        type: form.type.value,
+        weeklySchedule: buildSchedule(),
+      };
+      // Academic fields (only if selected)
+      if (form.stage.value) data.stage = form.stage.value;
+      if (form.grade.value) data.grade = parseInt(form.grade.value);
+      if (form.stage.value === 'secondary' && form.track.value) data.track = form.track.value;
+
+      const res = await fetch('/api/v1/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) location.reload();
+      else { const err = await res.json(); alert(err.message || 'حدث خطأ'); }
+    }
+
+    async function deleteGroup(id, name) {
+      const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: `سيتم حذف مجموعة "${name}" وجميع البيانات المرتبطة بها نهائياً!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'نعم، احذفها',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/v1/groups/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            await Swal.fire({
+              title: 'تم الحذف!',
+              text: 'تم حذف المجموعة بنجاح.',
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false
+            });
+            location.reload();
+          } else {
+            const err = await res.json();
+            Swal.fire('خطأ!', err.message || 'تعذر حذف المجموعة', 'error');
+          }
+        } catch (err) {
+          Swal.fire('خطأ!', 'حدث خطأ فني أثناء الاتصال بالسيرفر', 'error');
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

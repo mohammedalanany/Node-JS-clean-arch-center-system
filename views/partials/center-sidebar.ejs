@@ -1,0 +1,244 @@
+<style>
+  /* --- Master Sidebar Styling --- */
+  :root {
+    --sidebar-bg: #2d3436;
+    --sidebar-text: #b2bec3;
+    --sidebar-active-bg: rgba(74, 163, 223, 0.1);
+    --sidebar-active-text: #4aa3df;
+    --sidebar-hover-bg: #353b48;
+    --sidebar-width-collapsed: 80px;
+    --sidebar-width-expanded: 260px;
+  }
+
+  .main-sidebar {
+    width: var(--sidebar-width-collapsed);
+    background: var(--sidebar-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    min-height: 100vh;
+    height: 100%;
+    position: sticky;
+    top: 0;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    overflow-x: hidden;
+  }
+
+  .main-sidebar.expanded {
+    width: var(--sidebar-width-expanded);
+  }
+
+  /* Brand Section */
+  .main-sidebar .brand {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    background: #1e272e;
+    overflow: hidden;
+    gap: 15px;
+  }
+  .main-sidebar .brand i {
+    font-size: 1.8rem;
+    color: var(--sidebar-active-text);
+    min-width: 30px;
+    text-align: center;
+  }
+  .main-sidebar .brand-text {
+    font-weight: 800;
+    font-size: 1.3rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .main-sidebar.expanded .brand-text {
+    opacity: 1;
+  }
+
+  /* Navigation Links */
+  .main-sidebar .nav-links {
+    list-style: none;
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 1;
+  }
+
+  .main-sidebar .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    height: 50px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    overflow: hidden;
+    gap: 15px;
+    border-right: 4px solid transparent;
+    margin-bottom: 5px;
+  }
+
+  .main-sidebar .nav-item i {
+    font-size: 1.4rem;
+    min-width: 30px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .main-sidebar .nav-text {
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .main-sidebar.expanded .nav-text {
+    opacity: 1;
+  }
+
+  .main-sidebar .nav-item:hover {
+    background: var(--sidebar-hover-bg);
+    color: white;
+  }
+
+  .main-sidebar .nav-item.active {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    border-right-color: var(--sidebar-active-text);
+  }
+
+  .main-sidebar .nav-item.logout {
+    margin-top: auto;
+    color: #ff7675;
+    background: rgba(255, 118, 117, 0.05);
+  }
+  .main-sidebar .nav-item.logout:hover {
+    background: rgba(255, 118, 117, 0.15);
+    color: #ff4d4d;
+  }
+
+  /* Compatibility for Page Wrapper */
+  .wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: #f8f9fa;
+  }
+</style>
+
+<aside class="main-sidebar" id="mainSidebar">
+  <div class="brand">
+    <i class='bx bxs-graduation'></i>
+    <span class="brand-text"><%= typeof centerName !== 'undefined' ? centerName : 'لوحة التحكم' %></span>
+  </div>
+  
+  <nav class="nav-links">
+    <% if (user.role !== 'student') { %>
+      <a href="/dashboard" class="nav-item <%= active === 'dashboard' ? 'active' : '' %>" title="لوحة القيادة">
+        <i class='bx bx-grid-alt'></i> <span class="nav-text">لوحة القيادة</span>
+      </a>
+      <a href="/center/students" class="nav-item <%= active === 'students' ? 'active' : '' %>" title="الطلاب">
+        <i class='bx bx-group'></i> <span class="nav-text">الطلاب</span>
+      </a>
+      <a href="/center/groups" class="nav-item <%= active === 'groups' ? 'active' : '' %>" title="المجموعات">
+        <i class='bx bx-collection'></i> <span class="nav-text">المجموعات</span>
+      </a>
+      <a href="/center/schedule" class="nav-item <%= active === 'schedule' ? 'active' : '' %>" title="الجدول">
+        <i class='bx bx-calendar-event'></i> <span class="nav-text">الجدول</span>
+      </a>
+      <a href="/center/attendance" class="nav-item <%= active === 'attendance' ? 'active' : '' %>" title="تسجيل الحضور">
+        <i class='bx bx-check-shield'></i> <span class="nav-text">تسجيل الحضور</span>
+      </a>
+      <a href="/center/payments" class="nav-item <%= active === 'payments' ? 'active' : '' %>" title="المدفوعات">
+        <i class='bx bx-credit-card-front'></i> <span class="nav-text">المدفوعات</span>
+      </a>
+      <a href="/center/exams" class="nav-item <%= active === 'exams' ? 'active' : '' %>" title="الاختبارات">
+        <i class='bx bx-task'></i> <span class="nav-text">الاختبارات</span>
+      </a>
+    <% } else { %>
+      <a href="/student/profile" class="nav-item <%= active === 'students' ? 'active' : '' %>" title="ملفي الشخصي">
+        <i class='bx bx-user-circle'></i> <span class="nav-text">ملفي الشخصي</span>
+      </a>
+      <a href="/center/schedule" class="nav-item <%= active === 'schedule' ? 'active' : '' %>" title="حدول المواعيد">
+        <i class='bx bx-calendar'></i> <span class="nav-text">جدول المواعيد</span>
+      </a>
+    <% } %>
+    
+    <a href="/center/settings" class="nav-item <%= active === 'settings' ? 'active' : '' %>" title="الإعدادات">
+      <i class='bx bx-cog'></i> <span class="nav-text">الإعدادات</span>
+    </a>
+    
+    <form action="/logout" method="POST" id="logoutForm" style="margin-top: auto;">
+      <button type="button" onclick="confirmLogout()" class="nav-item logout" title="تسجيل الخروج" style="width: 100%; border: none; cursor: pointer; background: none; font-family: inherit;">
+        <i class='bx bx-log-out'></i> <span class="nav-text">تسجيل الخروج</span>
+      </button>
+    </form>
+  </nav>
+</aside>
+
+<script>
+  function confirmLogout() {
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'تسجيل الخروج',
+        text: 'هل أنت متأكد أنك تريد الخروج من النظام؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#bdc3c7',
+        confirmButtonText: 'نعم، خروج',
+        cancelButtonText: 'تراجع',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById('logoutForm').submit();
+        }
+      });
+    } else {
+      if (confirm('هل أنت متأكد أنك تريد الخروج من النظام؟')) {
+        document.getElementById('logoutForm').submit();
+      }
+    }
+  }
+</script>
+
+<script>
+  // Robust Toggle Sidebar Logic
+  (function() {
+    function initSidebar() {
+      const sidebar = document.getElementById("mainSidebar");
+      const topbar = document.querySelector(".topbar");
+      
+      if (topbar && !document.getElementById("sidebarToggleBtn")) {
+        const toggleBtn = document.createElement("i");
+        toggleBtn.className = "bx bx-menu";
+        toggleBtn.id = "sidebarToggleBtn";
+        toggleBtn.style.cssText = "font-size: 1.8rem; color: #ffffff; cursor: pointer; transition: 0.3s; margin-left: 15px; display: inline-flex; align-items: center;";
+        
+        topbar.prepend(toggleBtn);
+        
+        toggleBtn.addEventListener("click", () => {
+          sidebar.classList.toggle("expanded");
+          // Save preference
+          localStorage.setItem("sidebar-expanded", sidebar.classList.contains("expanded"));
+        });
+
+        // Restore state
+        if (localStorage.getItem("sidebar-expanded") === "true") {
+          sidebar.classList.add("expanded");
+        }
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initSidebar);
+    } else {
+      initSidebar();
+    }
+  })();
+</script>

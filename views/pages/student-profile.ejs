@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    :root {
+      --sidebar-bg: #333333;
+      --topbar-bg: #4aa3df;
+      --bg-body: #f0f2f5;
+      --primary: #4aa3df;
+      --accent: #5cb85c;
+      --danger: #d9534f;
+      --warning: #f0ad4e;
+      --text-main: #333;
+      --text-muted: #6c757d;
+      --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; min-height: 100vh; }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; } /* min-width fix for nested flex */
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; justify-content: space-between; font-weight: bold; flex-shrink: 0; }
+    .main-content { padding: 2rem; overflow-y: auto; }
+
+    /* Profile Header */
+    .profile-header { display: flex; gap: 2rem; background: white; padding: 2.5rem; border-radius: 12px; box-shadow: var(--card-shadow); margin-bottom: 2rem; position: relative; overflow: hidden; }
+    .profile-header::before { content: ''; position: absolute; top: 0; right: 0; width: 6px; height: 100%; background: var(--topbar-bg); }
+    
+    .avatar-wrapper { position: relative; }
+    .avatar { width: 140px; height: 140px; border-radius: 12px; object-fit: cover; border: 4px solid #f8f9fa; }
+    .status-dot { position: absolute; bottom: 5px; left: 5px; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white; }
+    .status-dot.active { background: var(--accent); }
+
+    .info-main h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .student-meta { display: flex; gap: 1.5rem; color: var(--text-muted); font-size: 0.95rem; }
+    .student-meta span { display: flex; align-items: center; gap: 6px; }
+
+    .qr-container { margin-right: auto; text-align: center; }
+    #qrcode { padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; }
+    .barcode-label { font-family: monospace; font-size: 0.8rem; color: #777; font-weight: bold; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 1rem; }
+    .stat-icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .stat-data .value { font-size: 1.4rem; font-weight: 800; }
+    .stat-data .label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+    /* Tabs */
+    .tabs-container { background: white; border-radius: 12px; box-shadow: var(--card-shadow); }
+    .tabs-header { display: flex; border-bottom: 1px solid #eee; padding: 0 1.5rem; }
+    .tab-btn { padding: 1.25rem 2rem; border: none; background: none; font-family: inherit; font-size: 1rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.3s; position: relative; }
+    .tab-btn.active { color: var(--topbar-bg); }
+    .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--topbar-bg); }
+    
+    .tab-content { padding: 2rem; display: none; }
+    .tab-content.active { display: block; }
+
+    /* Action Buttons & Tiles */
+    .quick-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .btn-action { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; color: white; text-decoration: none; font-size: 0.95rem; }
+    .btn-whatsapp { background: #25D366; }
+    .btn-call { background: var(--topbar-bg); }
+    .btn-report { background: var(--text-main); }
+    .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    .admin-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .action-tile { background: white; padding: 1.25rem; border-radius: 12px; box-shadow: var(--card-shadow); border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; font-family: inherit; }
+    .action-tile i { font-size: 1.8rem; }
+    .action-tile span { font-weight: 700; font-size: 0.9rem; }
+    .action-tile:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+
+    .tile-edit { color: #607d8b; border-bottom: 4px solid #607d8b; }
+    .tile-suspend { color: var(--warning); border-bottom: 4px solid var(--warning); }
+    .tile-activate { color: var(--accent); border-bottom: 4px solid var(--accent); }
+    .tile-archive { color: var(--danger); border-bottom: 4px solid var(--danger); }
+    .tile-print { color: var(--topbar-bg); border-bottom: 4px solid var(--topbar-bg); }
+
+    /* Modal Styles (CRITICAL FIX) */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-card { background: white; width: 100%; max-width: 800px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; }
+    .modal-header { padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
+    .modal-body { padding: 1.5rem 2rem; max-height: 80vh; overflow-y: auto; }
+    .modal-footer { padding: 1.5rem 2rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 1rem; background: #fafafa; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+    
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .form-group.full { grid-column: span 2; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-weight: 700; font-size: 0.8rem; color: #555; text-align: right; }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.7rem; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem; outline: none; text-align: right; }
+    .form-section-title { grid-column: span 2; font-size: 1rem; font-weight: 800; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 10px; color: var(--topbar-bg); }
+
+    .enrollment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .btn-enroll { background: var(--topbar-bg); color: white; padding: 0.6rem 1.2rem; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+    .group-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 1px solid #eee; border-radius: 10px; margin-bottom: 0.8rem; transition: 0.3s; }
+    .group-item:hover { border-color: var(--topbar-bg); background: #f0f7ff; }
+
+    /* Tables, Alerts & Status */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 1.2rem; text-align: right; border-bottom: 1px solid #f0f0f0; }
+    .data-table th { background: #fafafa; font-size: 0.85rem; color: var(--text-muted); font-weight: 700; }
+    .debt-alert { background: #fff5f5; border: 1px solid #feb2b2; padding: 1.2rem; border-radius: 10px; display: flex; align-items: center; gap: 15px; color: #c53030; margin-bottom: 2rem; }
+
+    .modal-header.head-edit { background: #eceff1; color: #455a64; }
+    .modal-header.head-enroll { background: #e3f2fd; color: #1976d2; }
+    
+    .status-banner { padding: 8px 20px; border-radius: 30px; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+    .status-banner.active { background: #e8f5e9; color: #2e7d32; }
+    .status-banner.suspended { background: #fff3e0; color: #ef6c00; }
+    .status-banner.archived { background: #f5f5f5; color: #666; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'students' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <span>مركز إدارة الطلاب / <%= student.firstName %> <%= student.lastName %></span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-shield-quarter'></i> واجهة الإدارة والتحكم</div>
+    </header>
+
+    <main class="main-content">
+      
+      <!-- Profile Header -->
+      <section class="profile-header">
+        <div class="avatar-wrapper">
+          <img src="<%= student.photoUrl || 'https://ui-avatars.com/api/?name=' + student.firstName + '+' + student.lastName + '&background=random&size=200' %>" class="avatar" alt="Student Photo">
+          <div class="status-dot <%= student.status === 'active' ? 'active' : '' %>"></div>
+        </div>
+        
+        <div class="info-main">
+          <% 
+            const stageMap = { 'primary': 'ابتدائى', 'preparatory': 'إعدادى', 'secondary': 'ثانوى' };
+            const gradeMap = { 1: 'الأول', 2: 'الثاني', 3: 'الثالث', 4: 'الرابع', 5: 'الخامس', 6: 'السادس' };
+          %>
+          <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
+            <h1 style="font-size: 2.2rem; font-weight: 800;"><%= student.firstName %> <%= student.lastName %></h1>
+            <div class="status-banner <%= student.status %>">
+              <i class='bx bxs-circle' style="font-size: 0.6rem;"></i>
+              <%= student.status === 'active' ? 'حساب نشط' : (student.status === 'suspended' ? 'حساب موقوف' : 'مؤرشف') %>
+            </div>
+          </div>
+          
+          <div class="student-meta">
+            <span><i class='bx bxs-school'></i> <%= student.school || 'مدرسة غير محددة' %></span>
+            <span><i class='bx bxs-graduation'></i> الصف <%= gradeMap[student.grade] %> <%= stageMap[student.stage] %></span>
+            <span><i class='bx bxs-bookmark-star'></i> <%= student.track === 'scientific' ? 'علمي' : (student.track === 'literary' ? 'أدبي' : 'عام') %></span>
+          </div>
+          
+          <div class="quick-actions">
+            <a href="https://wa.me/20<%= student.parentPhone %>" target="_blank" class="btn-action btn-whatsapp">
+              <i class='bx bxl-whatsapp'></i> مراسلة ولي الأمر
+            </a>
+            <a href="tel:0<%= student.parentPhone %>" class="btn-action btn-call">
+              <i class='bx bx-phone'></i> اتصال مباشر
+            </a>
+            <button onclick="generateReport()" class="btn-action btn-report">
+              <i class='bx bx-printer'></i> طباعة تقرير
+            </button>
+          </div>
+        </div>
+
+        <div class="qr-container">
+          <div id="qrcode"></div>
+          <div class="barcode-label"><%= student.barcode || ('ST-' + student.id.toString().padStart(5, '0')) %></div>
+        </div>
+      </section>
+
+      <% if (user.role !== 'student') { %>
+      <!-- Admin Control Tiles -->
+      <section class="admin-controls">
+        <button class="action-tile tile-edit" onclick="openEditModal()">
+           <i class='bx bxs-edit-alt'></i>
+           <span>تعديل البيانات</span>
+        </button>
+
+        <% if (student.status === 'suspended') { %>
+          <button class="action-tile tile-activate" onclick="toggleSuspend()">
+             <i class='bx bxs-lock-open-alt'></i>
+             <span>تنشيط الحساب</span>
+          </button>
+        <% } else { %>
+          <button class="action-tile tile-suspend" onclick="toggleSuspend()">
+             <i class='bx bxs-lock-alt'></i>
+             <span>إيقاف مؤقت</span>
+          </button>
+        <% } %>
+
+        <button class="action-tile tile-archive" onclick="archiveStudent()">
+           <i class='bx bxs-archive-in'></i>
+           <span>أرشفة الطالب</span>
+        </button>
+
+        <button class="action-tile tile-print" onclick="window.print()">
+           <i class='bx bxs-id-card'></i>
+           <span>بطاقة التعريف</span>
+        </button>
+      </section>
+      <% } %>
+
+      <!-- Analytics Cards -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #e1f5fe; color: #03a9f4;"><i class='bx bx-calendar-check'></i></div>
+          <div class="stat-data">
+            <div class="value"><%= stats.attendanceRate %>%</div>
+            <div class="label">نسبة الحضور</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #e8f5e9; color: #4caf50;"><i class='bx bx-trending-up'></i></div>
+          <div class="stat-data">
+            <div class="value"><%= stats.averageScore %></div>
+            <div class="label">متوسط الدرجات</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #fff3e0; color: #ff9800;"><i class='bx bx-task'></i></div>
+          <div class="stat-data">
+            <div class="value">85%</div>
+            <div class="label">تسليم الواجبات</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #ffebee; color: #f44336;"><i class='bx bx-wallet-alt'></i></div>
+          <div class="stat-data">
+            <div class="value"><%= stats.totalDebt %> ج.م</div>
+            <div class="label">المديونية الحالية</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabs Section -->
+      <section class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-btn active" onclick="showTab('academic')">المتابعة الأكاديمية</button>
+          <button class="tab-btn" onclick="showTab('financial')">السجل المالي</button>
+          <button class="tab-btn" onclick="showTab('notifications')">سجل الغياب</button>
+        </div>
+
+        <!-- Academic Tab -->
+        <div id="academic" class="tab-content active">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2.5rem;">
+            <div>
+              <div class="enrollment-header">
+                <h3>المجموعات المشترك بها</h3>
+                <% if (user.role !== 'student') { %>
+                  <button class="btn-enroll" onclick="openEnrollModal()"><i class='bx bx-plus'></i> إضافة لمجموعة</button>
+                <% } %>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>المجموعة</th>
+                    <th>المواعيد</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (student.groups && student.groups.length > 0) { %>
+                    <% student.groups.forEach(group => { %>
+                      <tr>
+                        <td style="font-weight: bold;"><%= group.name %></td>
+                        <td style="font-size: 0.85rem;">
+                          <% 
+                            if (group.weeklySchedule && group.weeklySchedule.length > 0) {
+                              const dayNames = { 
+                                sunday: 'الأحد', monday: 'الإثنين', tuesday: 'الثلاثاء',
+                                wednesday: 'الأربعاء', thursday: 'الخميس', friday: 'الجمعة', saturday: 'السبت' 
+                              };
+                              const scheduleStr = group.weeklySchedule.map(s => {
+                                const dayAr = dayNames[s.day.toLowerCase()] || s.day;
+                                return `<span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:4px; margin:2px; display:inline-block; font-weight:700;">${dayAr} (${s.startTime})</span>`;
+                              }).join(' ');
+                          %>
+                            <%- scheduleStr %>
+                          <% } else { %>
+                            <span style="color:#aaa;">غير محددة</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <% if (user.role !== 'student') { %>
+                            <button onclick="unenroll('<%= group.id %>')" style="color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.1rem;" title="إزالة من المجموعة"><i class='bx bx-trash'></i></button>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr><td colspan="4" style="text-align: center; color: #aaa; padding: 2rem;">الطالب غير مشترك في أي مجموعة حالياً</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+
+            </div>
+            <div>
+              <h3 style="margin-bottom: 1.5rem;">نتائج الاختبارات</h3>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الاختبار</th>
+                    <th>الدرجة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (student.examResults && student.examResults.length > 0) { %>
+                    <% student.examResults.forEach(res => { %>
+                      <tr>
+                        <td><%= res.exam.title %></td>
+                        <td style="font-weight: bold; color: <%= res.attainedMarks >= (res.exam.totalMarks/2) ? 'var(--accent)' : 'var(--danger)' %>">
+                          <%= res.attainedMarks %> / <%= res.exam.totalMarks %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr><td colspan="2" style="text-align: center; color: #aaa; padding: 2rem;">لا توجد درجات مسجلة</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Tab -->
+        <div id="financial" class="tab-content">
+          <% if (Number(stats.totalDebt) > 0) { %>
+            <div class="debt-alert">
+              <i class='bx bxs-error-circle' style="font-size: 1.5rem;"></i>
+              <div>
+                <strong>تنبيه مديونية:</strong> الطالب لديه مستحقات متأخرة بقيمة <strong><%= stats.totalDebt %> ج.م</strong>. يرجى المتابعة مع ولي الأمر.
+              </div>
+            </div>
+          <% } %>
+
+          <h3 style="margin-bottom: 1.5rem;">سجل المدفوعات</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>البند / الكورس</th>
+                <th>المبلغ</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (student.payments && student.payments.length > 0) { %>
+                <% student.payments.forEach(pay => { %>
+                  <tr>
+                    <td><%= new Date(pay.createdAt).toLocaleDateString('ar-EG') %></td>
+                    <td><%= pay.notes || 'مصروفات عامة' %></td>
+                    <td style="font-weight: bold;"><%= pay.amount %> ج.م</td>
+                    <td>
+                      <span style="color: <%= pay.status === 'paid' ? 'var(--accent)' : 'var(--warning)' %>; font-weight: bold;">
+                        <%= pay.status === 'paid' ? 'تم الدفع' : 'معلق' %>
+                      </span>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr><td colspan="4" style="text-align: center; color: #aaa; padding: 2rem;">لا توجد مدفوعات مسجلة</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Attendance Tab -->
+        <div id="notifications" class="tab-content">
+           <h3 style="margin-bottom: 1.5rem;">سجل الحضور والغياب (آخر 30 يوم)</h3>
+           <table class="data-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (student.attendances && student.attendances.length > 0) { %>
+                  <% student.attendances.forEach(att => { %>
+                    <tr>
+                      <td><%= new Date(att.date).toLocaleDateString('ar-EG') %></td>
+                      <td>
+                        <span style="color: <%= att.status === 'present' ? 'var(--accent)' : 'var(--danger)' %>; font-weight: bold;">
+                          <%= att.status === 'present' ? 'حضور' : 'غياب' %>
+                        </span>
+                      </td>
+                      <td><%= att.notes || '---' %></td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr><td colspan="3" style="text-align: center; color: #aaa; padding: 2rem;">لا يوجد سجل حضور مسجل</td></tr>
+                <% } %>
+              </tbody>
+           </table>
+        </div>
+      </section>
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+      <div class="modal-header head-edit">
+        <h2><i class='bx bx-edit'></i> تحديث بيانات الطالب</h2>
+        <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+      </div>
+      <form id="editForm" onsubmit="handleEdit(event)">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-section-title">المعلومات الأساسية</div>
+            <div class="form-group">
+              <label>الأسم الأول</label>
+              <input type="text" name="firstName" value="<%= student.firstName %>" required>
+            </div>
+            <div class="form-group">
+              <label>الأسم الأخير</label>
+              <input type="text" name="lastName" value="<%= student.lastName %>" required>
+            </div>
+            <div class="form-group">
+              <label>كود الباركود (Barcode)</label>
+              <input type="text" name="barcode" value="<%= student.barcode %>">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" name="email" value="<%= student.email %>">
+            </div>
+            
+            <div class="form-group">
+              <label>تليفون الطالب</label>
+              <input type="text" name="phone" value="<%= student.phone %>">
+            </div>
+            <div class="form-group">
+              <label>تليفون ولي الأمر</label>
+              <input type="text" name="parentPhone" value="<%= student.parentPhone %>" required>
+            </div>
+
+            <div class="form-section-title">المعلومات الأكاديمية</div>
+            <div class="form-group">
+              <label>المرحلة الدراسية</label>
+              <select name="stage" onchange="onEditStageChange(this.value)" required>
+                <option value="primary" <%= student.stage === 'primary' ? 'selected' : '' %>>ابتدائي</option>
+                <option value="preparatory" <%= student.stage === 'preparatory' ? 'selected' : '' %>>إعدادي</option>
+                <option value="secondary" <%= student.stage === 'secondary' ? 'selected' : '' %>>ثانوي</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الصف الدراسي</label>
+              <select name="grade" id="editFieldGrade" required>
+                <!-- Filled via JS -->
+              </select>
+            </div>
+            <div class="form-group" id="editTrackContainer" style="<%= student.stage === 'secondary' ? 'display:flex;' : 'display:none;' %>">
+              <label>التخصص (المسار)</label>
+              <select name="track">
+                <option value="general" <%= student.track === 'general' ? 'selected' : '' %>>عام</option>
+                <option value="scientific" <%= student.track === 'scientific' ? 'selected' : '' %>>علمي</option>
+                <option value="literary" <%= student.track === 'literary' ? 'selected' : '' %>>أدبي</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>المدرسة</label>
+              <input type="text" name="school" value="<%= student.school %>">
+            </div>
+
+            <div class="form-section-title">معلومات إضافية</div>
+            <div class="form-group">
+              <label>تاريخ الميلاد</label>
+              <input type="date" name="dateOfBirth" value="<%= student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '' %>">
+            </div>
+            <div class="form-group">
+              <label>رابط الصورة الشخصية</label>
+              <input type="text" name="photoUrl" value="<%= student.photoUrl %>">
+            </div>
+            <div class="form-group full">
+              <label>العنوان</label>
+              <textarea name="address" rows="2"><%= student.address %></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-action" style="background:#eee;color:#333;font-weight:700;" onclick="closeModal('editModal')">إلغاء</button>
+          <button type="submit" class="btn-action btn-report" style="background:#455a64;">تحديث البيانات الآن</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enrollment Modal -->
+  <div class="modal-overlay" id="enrollModal">
+    <div class="modal-card">
+      <div class="modal-header head-enroll">
+        <h2><i class='bx bx-plus-circle'></i> الاشتراك في مجموعة دراسية جديدة</h2>
+        <button class="close-btn" onclick="closeModal('enrollModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.5rem; color: #666;">اختر من بين مجموعات الـ <strong><%= stageMap[student.stage] %></strong> المتاحة:</p>
+        <div id="groupsList">
+           <% 
+             const relevantGroups = allGroups.filter(g => {
+               // الأساس: مطابقة المرحلة والصف
+               const stageMatch = g.stage === student.stage;
+               const gradeMatch = g.grade === parseInt(student.grade);
+               
+               // الشعبة: مطابقة أو أن المجموعة عامة
+               const trackMatch = !g.track || g.track === 'general' || g.track === student.track;
+               
+               // عدم عرض المجموعات المشترك فيها بالفعل
+               const notAlreadyEnrolled = !student.groups.some(sg => sg.id === g.id);
+               
+               return stageMatch && gradeMatch && trackMatch && notAlreadyEnrolled;
+             });
+
+             if (relevantGroups.length > 0) { 
+                relevantGroups.forEach(g => {
+           %>
+              <div class="group-item">
+                <div class="g-info">
+                  <div style="font-weight: 800;"><%= g.name %></div>
+                  <div style="font-size: 0.8rem; color: #888;">
+                    <%= g.stage ? (g.grade + ' ' + g.stage) : 'عام' %> | 
+                    <%= g.weeklySchedule ? g.weeklySchedule.length + ' مواعيد' : 'مواعيد غير محددة' %>
+                  </div>
+                </div>
+                <button onclick="enroll('<%= g.id %>')" class="btn-enroll">اختيار</button>
+              </div>
+           <%   })
+             } else { %>
+              <div style="text-align: center; padding: 2rem; color: #aaa;">لا توجد مجموعات متاحة حالياً</div>
+           <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Utils
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openEditModal() { 
+      onEditStageChange('<%= student.stage %>', '<%= student.grade %>');
+      document.getElementById('editModal').style.display = 'flex'; 
+    }
+    function openEnrollModal() { document.getElementById('enrollModal').style.display = 'flex'; }
+
+    function onEditStageChange(stage, selectedGrade) {
+      const gradeSelect = document.getElementById('editFieldGrade');
+      const trackContainer = document.getElementById('editTrackContainer');
+      const grades = {
+        primary: [1, 2, 3, 4, 5, 6],
+        preparatory: [1, 2, 3],
+        secondary: [1, 2, 3]
+      };
+      
+      gradeSelect.innerHTML = grades[stage].map(g => `<option value="${g}" ${g == selectedGrade ? 'selected' : ''}>الصف ${g}</option>`).join('');
+      
+      // إخفاء/إظهار التراك (الشعبة) - تظهر فقط في الثانوي
+      if (stage === 'secondary') {
+        trackContainer.style.display = 'flex';
+      } else {
+        trackContainer.style.display = 'none';
+      }
+    }
+
+    // API Actions
+    async function handleEdit(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const rawData = Object.fromEntries(formData.entries());
+      
+      // Data Cleaning & Type Casting
+      const data = { ...rawData };
+      if (data.grade) data.grade = parseInt(data.grade);
+      
+      // Remove empty optional fields to avoid validation errors
+      const optionalFields = ['barcode', 'email', 'phone', 'school', 'dateOfBirth', 'photoUrl', 'address'];
+      optionalFields.forEach(field => {
+        if (data[field] === '') {
+          delete data[field];
+        }
+      });
+
+      try {
+        const res = await fetch('/api/v1/students/<%= student.id %>', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+          await Swal.fire({ 
+            title: 'تم التحديث!', 
+            text: 'تم تعديل بيانات الطالب بنجاح.', 
+            icon: 'success', 
+            timer: 1500, 
+            showConfirmButton: false 
+          });
+          location.reload();
+        } else {
+          const err = await res.json();
+          Swal.fire('خطأ!', err.errors ? err.errors.join('<br>') : (err.message || 'فشل التحديث'), 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('خطأ!', 'حدث خطأ فني أثناء التحديث', 'error');
+      }
+    }
+
+    async function toggleSuspend() {
+      const isSuspended = '<%= student.status %>' === 'suspended';
+      const result = await Swal.fire({
+        title: isSuspended ? 'تنشيط الطالب؟' : 'إيقاف الطالب مؤقتاً؟',
+        text: isSuspended ? 'سيتمكن الطالب من تسجيل الحضور مرة أخرى.' : 'لن يتمكن الطالب من تسجيل الحضور حتى يتم تنشيطه مرة أخرى.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: isSuspended ? '#5cb85c' : '#f0ad4e',
+        confirmButtonText: isSuspended ? 'تنشيط' : 'إيقاف مؤقت',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch('/api/v1/students/<%= student.id %>/status', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: isSuspended ? 'active' : 'suspended' })
+          });
+          if (res.ok) {
+            await Swal.fire({ title: 'تم!', icon: 'success', timer: 1000, showConfirmButton: false });
+            location.reload();
+          }
+        } catch (err) {
+          Swal.fire('خطأ!', 'فشل تغيير حالة الطالب', 'error');
+        }
+      }
+    }
+
+    async function archiveStudent() {
+      const result = await Swal.fire({
+        title: 'أرشفة الطالب؟',
+        text: 'سيتم كتم بيانات الطالب ونقله للأرشيف. لا يمكن تسجيل حضوره وهو مؤرشف.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'نعم، أرشفة',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch('/api/v1/students/<%= student.id %>', { method: 'DELETE' });
+          if (res.ok) {
+            await Swal.fire({ title: 'تمت الأرشفة', icon: 'success', timer: 1500, showConfirmButton: false });
+            location.href = '/center/students';
+          }
+        } catch (err) {
+          Swal.fire('خطأ!', 'فشل أرشفة الطالب', 'error');
+        }
+      }
+    }
+
+    async function enroll(groupId) {
+      try {
+        const res = await fetch('/api/v1/students/<%= student.id %>/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId })
+        });
+        if (res.ok) {
+          await Swal.fire({ title: 'تم الاشتراك!', text: 'تم تسجيل الطالب في المجموعة بنجاح.', icon: 'success', timer: 1500, showConfirmButton: false });
+          location.reload();
+        } else {
+          const err = await res.json();
+          Swal.fire('خطأ!', err.message || 'فشل الاشتراك في المجموعة', 'error');
+        }
+      } catch (err) {
+        Swal.fire('خطأ!', 'حدث خطأ أثناء الاشتراك', 'error');
+      }
+    }
+
+    async function unenroll(groupId) {
+      const result = await Swal.fire({
+        title: 'إزالة من المجموعة؟',
+        text: 'هل أنت متأكد من إزالة الطالب من هذه المجموعة الدراسية؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f44336',
+        confirmButtonText: 'نعم، إزالة',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch('/api/v1/students/<%= student.id %>/groups', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId })
+          });
+          if (res.ok) {
+            await Swal.fire({ title: 'تمت الإزالة', icon: 'success', timer: 1000, showConfirmButton: false });
+            location.reload();
+          }
+        } catch (err) {
+          Swal.fire('خطأ!', 'فشل إزالة الطالب من المجموعة', 'error');
+        }
+      }
+    }
+
+    // Tabs Logic
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // QR Code Logic
+    new QRCode(document.getElementById("qrcode"), {
+      text: "<%= student.barcode || ('ST-' + student.id) %>",
+      width: 100, height: 100
+    });
+
+    // Charts Logic
+    const ctx = document.getElementById('examsChart').getContext('2d');
+    const examLabels = <%- JSON.stringify(student.examResults.map(r => r.exam.title)) %>;
+    const examData = <%- JSON.stringify(student.examResults.map(r => r.attainedMarks)) %>;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: examLabels.length ? examLabels : ['لا توجد بيانات'],
+        datasets: [{
+          label: 'درجة الطالب',
+          data: examData.length ? examData : [0],
+          borderColor: '#4aa3df', tension: 0.4, fill: true, backgroundColor: 'rgba(74, 163, 223, 0.1)'
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    function generateReport() { alert('جاري إنشاء التقرير...'); }
+  </script>
+
+</body>
+</html>

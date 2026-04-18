@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    :root {
+      --sidebar-bg: #333333;
+      --topbar-bg: #4aa3df;
+      --bg-body: #f8f9fa;
+      --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --accent: #5cb85c;
+      --warning: #f0ad4e;
+      --danger: #d9534f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); color: #333; display: flex; min-height: 100vh; }
+
+    .wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: 60px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 2rem; color: white; justify-content: space-between; font-weight: bold; flex-shrink: 0; }
+    .main-content { padding: 2rem; overflow-y: auto; }
+
+    /* Control Header */
+    .control-panel { background: white; padding: 1.5rem 2rem; border-radius: 12px; box-shadow: var(--card-shadow); margin-bottom: 2rem; display: flex; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 250px; }
+    .form-group label { font-weight: 700; font-size: 0.9rem; color: #555; }
+    .form-group select, .form-group input { padding: 0.8rem; border: 2px solid #eee; border-radius: 10px; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; }
+    .form-group select:focus, .form-group input:focus { border-color: var(--topbar-bg); }
+
+    .btn-load { background: var(--topbar-bg); color: white; padding: 0.8rem 2rem; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; height: 50px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+    .btn-load:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74, 163, 223, 0.3); }
+
+    /* Stats Ribbon */
+    .stats-ribbon { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-mini { background: white; padding: 0.75rem 1.5rem; border-radius: 30px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.85rem; }
+    .stat-mini i { font-size: 1.2rem; }
+    .stat-mini.present { color: var(--accent); border: 1px solid var(--accent); }
+    .stat-mini.absent { color: var(--danger); border: 1px solid var(--danger); }
+    .stat-mini.late { color: var(--warning); border: 1px solid var(--warning); }
+
+    /* Attendance Table */
+    .attendance-card { background: white; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { background: #fafafa; padding: 1.2rem 1.5rem; text-align: right; font-size: 0.85rem; color: #777; border-bottom: 2px solid #eee; }
+    .data-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f2f2f2; vertical-align: middle; }
+    
+    .student-info { display: flex; align-items: center; gap: 12px; }
+    .student-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #999; }
+    .student-name { font-weight: 700; color: #333; }
+    .student-code { font-size: 0.75rem; color: #999; display: block; }
+
+    /* Custom Toggles */
+    .status-group { display: flex; background: #f0f0f0; padding: 4px; border-radius: 8px; gap: 4px; width: fit-content; }
+    .status-btn { padding: 6px 15px; border-radius: 6px; border: none; font-family: inherit; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; color: #777; background: transparent; }
+    
+    .status-btn.present.active { background: var(--accent); color: white; }
+    .status-btn.absent.active { background: var(--danger); color: white; }
+    .status-btn.late.active { background: var(--warning); color: white; }
+    .status-btn.excused.active { background: #607d8b; color: white; }
+
+    .debt-badge { color: var(--danger); font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+
+    /* Floating Action Bar */
+    .action-bar { position: sticky; bottom: 2rem; left: 0; right: 0; background: white; padding: 1rem 2rem; border-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; margin-top: 2rem; border-top: 4px solid var(--topbar-bg); z-index: 100; }
+    .notify-check { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #555; cursor: pointer; }
+    .notify-check input { width: 18px; height: 18px; cursor: pointer; }
+    
+    .btn-save { background: var(--accent); color: white; padding: 0.8rem 2.5rem; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 1rem; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+    .btn-save:hover { background: #4cae4c; transform: scale(1.02); }
+
+    .empty-state { padding: 4rem 2rem; text-align: center; color: #aaa; }
+    .empty-state i { font-size: 4rem; display: block; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'attendance' }) %>
+
+  <div class="wrapper">
+    <header class="topbar">
+      <span>تسجيل الحضور اليدوي / Traditional Attendance</span>
+      <div style="font-size: 0.9rem; font-weight: normal;"><i class='bx bx-calendar-check'></i> إدارة الحصص الدراسية</div>
+    </header>
+
+    <main class="main-content">
+      
+      <!-- Filters -->
+      <section class="control-panel">
+        <div class="form-group">
+          <label>اختر المجموعة الدراسية</label>
+          <select id="groupSelect">
+            <option value="">-- اختر المجموعة --</option>
+            <% groups.forEach(group => { %>
+              <option value="<%= group.id %>"><%= group.name %> (<%= group.stage %> - <%= group.grade %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>تاريخ الحصة</label>
+          <input type="date" id="attendanceDate" value="<%= new Date().toISOString().split('T')[0] %>">
+        </div>
+        <button class="btn-load" onclick="loadStudents()">
+          <i class='bx bx-refresh'></i> تحميل قائمة الطلاب
+        </button>
+      </section>
+
+      <!-- Results Area -->
+      <div id="attendanceArea" style="display: none;">
+        <div class="stats-ribbon">
+          <div class="stat-mini present"><i class='bx bxs-check-circle'></i> حاضر: <span id="countPresent">0</span></div>
+          <div class="stat-mini absent"><i class='bx bxs-x-circle'></i> غائب: <span id="countAbsent">0</span></div>
+          <div class="stat-mini late"><i class='bx bxs-time-five'></i> متأخر: <span id="countLate">0</span></div>
+          <div style="flex: 1;"></div>
+          <button style="background:none; border:none; color:var(--topbar-bg); font-weight:700; cursor:pointer;" onclick="markAll('present')">تحديد الكل كـ حاضر</button>
+        </div>
+
+        <div class="attendance-card">
+          <table class="data-table" id="studentTable">
+            <thead>
+              <tr>
+                <th>الطالب</th>
+                <th>الحالة المالية</th>
+                <th>تسجيل الحضور</th>
+                <th>ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="studentList">
+              <!-- JS Injected -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="action-bar">
+          <label class="notify-check">
+            <input type="checkbox" id="notifyParents" checked>
+            <span>إرسال تنبيهات WhatsApp لأولياء أمور (الغائبين والمؤخرين فقط)</span>
+          </label>
+          <button class="btn-save" onclick="saveAttendance()">
+            <i class='bx bxs-save'></i> حفظ السجل والتحضير
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="noGroupState" class="empty-state">
+        <i class='bx bx-spreadsheet'></i>
+        <p>يرجى اختيار المجموعة والتاريخ لبدء عملية التحضير</p>
+      </div>
+
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <script>
+    let currentStudents = [];
+    let currentAttendance = {}; // studentId -> recordId if exists
+
+    async function loadStudents() {
+      const groupId = document.getElementById('groupSelect').value;
+      const date = document.getElementById('attendanceDate').value;
+      
+      if (!groupId) return Swal.fire('تنبيه', 'يرجى اختيار مجموعة أولاً', 'info');
+
+      try {
+        const res = await fetch(`/center/attendance/api/${groupId}/${date}`);
+        const result = await res.json();
+        
+        if (result.success) {
+          currentStudents = result.data.students || [];
+          const recordsMap = {};
+          result.data.records.forEach(r => recordsMap[r.studentId] = r);
+          
+          renderTable(currentStudents, recordsMap);
+          document.getElementById('attendanceArea').style.display = 'block';
+          document.getElementById('noGroupState').style.display = 'none';
+          updateStats();
+        }
+      } catch (err) {
+        Swal.fire('خطأ', 'فشل تحميل بيانات المجموعة', 'error');
+      }
+    }
+
+    function renderTable(students, records) {
+      const tbody = document.getElementById('studentList');
+      tbody.innerHTML = students.map(s => {
+        const record = records[s.id];
+        const status = record ? record.status : 'absent'; // Default Absent as discussed
+        const notes = record ? (record.notes || '') : '';
+        
+        return `
+          <tr data-id="${s.id}">
+            <td>
+              <div class="student-info">
+                <div class="student-avatar">${s.firstName[0]}</div>
+                <div>
+                  <span class="student-name">${s.firstName} ${s.lastName}</span>
+                  <span class="student-code">#${s.barcode || s.id}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="debt-badge">
+                <i class='bx bx-error-circle'></i> مديونية: 0 ج.م
+              </div>
+            </td>
+            <td>
+              <div class="status-group">
+                <button class="status-btn present ${status === 'present' ? 'active' : ''}" onclick="setStatus(${s.id}, 'present')">حاضر</button>
+                <button class="status-btn absent ${status === 'absent' ? 'active' : ''}" onclick="setStatus(${s.id}, 'absent')">غائب</button>
+                <button class="status-btn late ${status === 'late' ? 'active' : ''}" onclick="setStatus(${s.id}, 'late')">متأخر</button>
+                <button class="status-btn excused ${status === 'excused' ? 'active' : ''}" onclick="setStatus(${s.id}, 'excused')">بإذن</button>
+              </div>
+            </td>
+            <td>
+              <input type="text" class="notes-input" value="${notes}" placeholder="اضف ملاحظة..." 
+                     style="width:100%; padding:5px; border:1px solid #eee; border-radius:4px; font-family:inherit;">
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setStatus(studentId, status) {
+      const row = document.querySelector(`tr[data-id="${studentId}"]`);
+      row.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+      row.querySelector(`.status-btn.${status}`).classList.add('active');
+      updateStats();
+    }
+
+    function markAll(status) {
+      document.querySelectorAll('.status-group').forEach(group => {
+        group.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+        group.querySelector(`.status-btn.${status}`).classList.add('active');
+      });
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('countPresent').innerText = document.querySelectorAll('.status-btn.present.active').length;
+      document.getElementById('countAbsent').innerText = document.querySelectorAll('.status-btn.absent.active').length;
+      document.getElementById('countLate').innerText = document.querySelectorAll('.status-btn.late.active').length;
+    }
+
+    async function saveAttendance() {
+      const groupId = document.getElementById('groupSelect').value;
+      const date = document.getElementById('attendanceDate').value;
+      const notify = document.getElementById('notifyParents').checked;
+      
+      const records = [];
+      document.querySelectorAll('#studentList tr').forEach(row => {
+        const studentId = row.dataset.id;
+        const status = row.querySelector('.status-btn.active').classList.contains('present') ? 'present' :
+                       (row.querySelector('.status-btn.active').classList.contains('absent') ? 'absent' :
+                       (row.querySelector('.status-btn.active').classList.contains('late') ? 'late' : 'excused'));
+        const notes = row.querySelector('.notes-input').value;
+        records.push({ studentId: parseInt(studentId), status, notes });
+      });
+
+      Swal.fire({
+        title: 'جاري الحفظ...',
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const res = await fetch('/center/attendance/api/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId, date, records, notify })
+        });
+        
+        if (res.ok) {
+          Swal.fire({
+            title: 'تم بنجاح!',
+            text: notify ? 'تم حفظ الغياب وإرسال التنبيهات لأولياء الأمور.' : 'تم حفظ سجل الحضور بنجاح.',
+            icon: 'success'
+          });
+        }
+      } catch (err) {
+        Swal.fire('خطأ', 'فشل حفظ السجل', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>

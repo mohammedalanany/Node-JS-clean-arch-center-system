@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary: #4aa3df; --accent: #6c5ce7;
+      --bg-body: #f8fafc; --text-main: #333; --border: #edf2f7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-body); display: flex; min-height: 100vh; color: var(--text-main); }
+    
+    .wrapper { flex: 1; display: flex; flex-direction: column; overflow-x: hidden; }
+    .main-content { padding: 2.5rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+
+    /* Composer */
+    .composer { background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); padding: 2rem; border: 1px solid var(--border); margin-bottom: 3rem; }
+    .composer h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-weight: 700; font-size: 0.9rem; color: #555; }
+    .form-control { padding: 0.85rem 1.25rem; border: 2px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; transition: 0.2s; }
+    .form-control:focus { border-color: var(--primary); background: #fbfdff; }
+    
+    .btn-send { background: linear-gradient(135deg, var(--primary), #2980b9); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-weight: 800; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 1rem; transition: 0.3s; width: fit-content; align-self: flex-end; }
+    .btn-send:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(74, 163, 223, 0.3); }
+
+    /* Feed */
+    .notif-list { display: flex; flex-direction: column; gap: 1.5rem; }
+    .notif-card { background: white; border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border); display: flex; gap: 1.5rem; transition: 0.2s; }
+    .notif-card:hover { border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+    
+    .notif-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+    .notif-icon.info { background: #e3f2fd; color: #1976d2; }
+    .notif-icon.warning { background: #fff3e0; color: #f57c00; }
+    .notif-icon.ad { background: #f3e5f5; color: #7b1fa2; }
+    
+    .notif-body { flex: 1; }
+    .notif-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 6px; }
+    .notif-content { color: #555; font-size: 0.95rem; line-height: 1.6; margin-bottom: 12px; }
+    .notif-meta { display: flex; align-items: center; gap: 20px; font-size: 0.8rem; font-weight: 700; color: #aaa; }
+
+    .notif-actions { display: flex; gap: 8px; }
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #cbd5e0; transition: 0.2s; }
+    .action-btn:hover { color: #e53e3e; }
+    .toggle-btn { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; }
+    .toggle-btn.active { background: #e6fffa; color: #38b2ac; }
+    .toggle-btn.inactive { background: #fff5f5; color: #e53e3e; }
+
+    .empty-state { text-align: center; padding: 4rem; color: #a0aec0; }
+    .empty-state i { font-size: 4rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/center-sidebar', { active: 'notifications' }) %>
+
+  <div class="wrapper">
+    <header style="height: 60px; background: white; border-bottom: 2px solid var(--border); display: flex; align-items: center; padding: 0 2rem;">
+      <div style="font-weight: 800;"><i class='bx bx-paper-plane' style="color:var(--primary);"></i> مركز التنبيهات والأخبار</div>
+    </header>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>التنبيهات والإعلانات</h1>
+      </div>
+
+      <!-- Notification Composer -->
+      <div class="composer">
+        <h2><i class='bx bx-edit-alt'></i> كتابة إعلان جديد</h2>
+        <form id="notifForm" onsubmit="handleSend(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>عنوان الإشعار *</label>
+              <input type="text" name="title" class="form-control" placeholder="مثال: تنبيه هام بخصوص موعد الإجازة" required>
+            </div>
+            <div class="form-group">
+              <label>النوع / التصنيف</label>
+              <select name="type" class="form-control">
+                <option value="info">ℹ️ معلومة عامة</option>
+                <option value="warning">⚠️ تنبيه هام</option>
+                <option value="ad">📢 إعلان/عرض</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الجمهور المستهدف</label>
+              <select name="groupId" class="form-control">
+                <option value="">📱 كافة الطلاب المشتركين</option>
+                <% groups.forEach(g => { %>
+                  <option value="<%= g.id %>">👥 مجموعة: <%= g.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>محتوى الإعلان *</label>
+              <textarea name="content" class="form-control" rows="4" placeholder="اكتب تفاصيل الإعلان هنا..." required></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn-send">
+            <i class='bx bx-send'></i> نشر الإعلان الآن
+          </button>
+        </form>
+      </div>
+
+      <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem;">سجل الإعلانات السابقة</h2>
+      
+      <div class="notif-list">
+        <% if (notifications.length === 0) { %>
+          <div class="empty-state">
+            <i class='bx bx-history'></i>
+            <p>لا يوجد سجل إعلانات سابقة لهذا المركز.</p>
+          </div>
+        <% } %>
+        
+        <% notifications.forEach(n => { %>
+          <div class="notif-card" id="notif-<%= n.id %>">
+            <div class="notif-icon <%= n.type %>">
+              <i class='bx bx-<%= n.type === "info" ? "info-circle" : (n.type === "warning" ? "error" : "purchase-tag") %>'></i>
+            </div>
+            <div class="notif-body">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="notif-title"><%= n.title %></div>
+                <div class="notif-actions">
+                  <button class="toggle-btn <%= n.isActive ? 'active' : 'inactive' %>" onclick="toggleNotif(<%= n.id %>)">
+                    <%= n.isActive ? 'نشط' : 'متوقف' %>
+                  </button>
+                  <button class="action-btn" onclick="deleteNotif(<%= n.id %>)"><i class='bx bx-trash'></i></button>
+                </div>
+              </div>
+              <div class="notif-content"><%= n.content %></div>
+              <div class="notif-meta">
+                <span><i class='bx bx-time-five'></i> <%= new Date(n.createdAt).toLocaleString('ar-EG') %></span>
+                <span><i class='bx bx-group'></i> <%= n.group ? n.group.name : 'كافة الطلاب' %></span>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    
+  <%- include('../partials/footer') %>
+    </main>
+  </div>
+
+  <script>
+    async function handleSend(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        title: form.title.value,
+        content: form.content.value,
+        type: form.type.value,
+        groupId: form.groupId.value || null
+      };
+
+      try {
+        const res = await fetch('/api/v1/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          Swal.fire({ title: 'تم النشر!', text: 'تم إرسال الإشعار بنجاح', icon: 'success' });
+          location.reload();
+        }
+      } catch (err) { Swal.fire('خطأ', 'فشل في العملية', 'error'); }
+    }
+
+    async function toggleNotif(id) {
+      const res = await fetch(`/api/v1/notifications/${id}/toggle`, { method: 'PATCH' });
+      if (res.ok) location.reload();
+    }
+
+    async function deleteNotif(id) {
+      const result = await Swal.fire({
+        title: 'حذف الإعلان؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+      });
+      if (result.isConfirmed) {
+        const res = await fetch(`/api/v1/notifications/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          document.getElementById(`notif-${id}`).remove();
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

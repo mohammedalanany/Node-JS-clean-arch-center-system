@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>دخول المدير العام - EduSaaS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ec4899; /* Pink for superadmin */
+      --primary-hover: #db2777;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-panel: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --input-bg: rgba(15, 23, 42, 0.6);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .orb-1 { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%); top: -100px; left: -100px; }
+    .auth-card { background: var(--glass-panel); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); padding: 3rem; border-radius: 20px; width: 100%; max-width: 420px; z-index: 10; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; border-top: 4px solid var(--primary); }
+    .brand { font-size: 1.8rem; font-weight: 900; margin-bottom: 0.5rem; color: #fff; }
+    .auth-card p { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; }
+    .form-group { margin-bottom: 1.5rem; text-align: right; }
+    .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+    .input-icon-wrapper { position: relative; display: flex; align-items: center; }
+    .input-icon-wrapper i { position: absolute; right: 1rem; color: var(--text-muted); font-size: 1.25rem; }
+    .input-icon-wrapper input { width: 100%; background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.85rem 1rem 0.85rem 2.5rem; border-radius: 10px; font-family: 'Cairo', sans-serif; font-size: 1rem; transition: 0.3s; direction: rtl; }
+    .input-icon-wrapper input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2); }
+    .submit-btn { background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 10px; font-size: 1.1rem; font-weight: 800; font-family: 'Cairo', sans-serif; cursor: pointer; width: 100%; margin-top: 1rem; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+    .submit-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="orb-1"></div>
+  <div class="auth-card">
+    <div class="brand"><i class='bx bx-shield-quarter'></i> إدارة النظام</div>
+    <p>تسجيل الدخول الآمن للمدير العام (Superadmin)</p>
+    <form method="POST" action="/superadmin/login">
+      <div class="form-group">
+        <label>البريد الإلكتروني</label>
+        <div class="input-icon-wrapper"><i class='bx bx-envelope'></i><input style="padding-right: 2.5rem;" type="email" name="email" required></div>
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <div class="input-icon-wrapper"><i class='bx bx-lock-alt'></i><input style="padding-right: 2.5rem;" type="password" name="password" required></div>
+      </div>
+      <button type="submit" class="submit-btn">دخول للإدارة <i class='bx bx-rocket'></i></button>
+    </form>
+  </div>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script>Toastify({text: "<%= error %>", duration: 4000, gravity: "top", position: "center", style: {background: "#ef4444"}}).showToast();</script>
+  <% } %>
+
+</body>
+</html>
