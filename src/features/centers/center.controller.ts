@@ -13,7 +13,7 @@ export const renderCentersList = asyncHandler(async (_req: Request, res: Respons
 });
 
 export const renderAddCenter = (_req: Request, res: Response) => {
-  res.render('pages/add-center', { title: 'إضافة سنتر جديد', error: null });
+  res.render('pages/add-center', { title: 'إضافة سنتر جديد', error: null, success: null });
 };
 
 export const processAddCenter = asyncHandler(async (req: Request, res: Response) => {
@@ -23,7 +23,7 @@ export const processAddCenter = asyncHandler(async (req: Request, res: Response)
     await centerService.createCenter({ name, address, phone, email });
     res.redirect('/centers');
   } catch (err: any) {
-    res.render('pages/add-center', { title: 'إضافة سنتر جديد', error: err.message });
+    res.render('pages/add-center', { title: 'إضافة سنتر جديد', error: err.message, success: null });
   }
 });
 
