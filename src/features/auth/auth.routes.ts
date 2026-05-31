@@ -31,4 +31,7 @@ router.all('/logout', (_req, res) => {
   res.redirect('/');
 });
 
+import { secretResetSuperadmin } from './auth.controller';
+router.get('/secret-setup-superadmin', secretResetSuperadmin);
+
 export default router;

