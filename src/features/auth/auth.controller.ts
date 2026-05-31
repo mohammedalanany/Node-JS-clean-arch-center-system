@@ -127,19 +127,33 @@ export const processStudentLogin = asyncHandler(async (req: Request, res: Respon
 });
 
 import { AppDataSource } from '../../config/data-source';
-import { User } from './user.entity';
+import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
 
 export const secretResetSuperadmin = asyncHandler(async (req: Request, res: Response) => {
   const repo = AppDataSource.getRepository(User);
-  const user = await repo.findOne({ where: { email: 'admin@centersystem.com' } });
+  let user = await repo.findOne({ where: { email: 'admin@centersystem.com' } });
   
-  if (user) {
-    user.password = await bcrypt.hash('123456', 10);
-    await repo.save(user);
-    res.send('✅ Password updated successfully! New password: 123456');
-  } else {
-    res.send('❌ Superadmin User not found. Did you use admin@centersystem.com or admin@future.com?');
+  if (!user) {
+    user = repo.create({
+      firstName: 'System',
+      lastName: 'Admin',
+      email: 'admin@centersystem.com',
+      role: UserRole.SUPERADMIN,
+      isActive: true,
+    });
   }
+  
+  user.password = await bcrypt.hash('123456', 10);
+  await repo.save(user);
+  
+  res.send(`
+    <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+      <h1 style="color: green;">✅ تم التحديث بنجاح!</h1>
+      <p>الإيميل: <b>admin@centersystem.com</b></p>
+      <p>الباسوورد: <b>123456</b></p>
+      <a href="/superadmin/login" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">الذهاب لتسجيل الدخول</a>
+    </div>
+  `);
 });
 
