@@ -117,6 +117,19 @@
         </div>
 
         <div id="manualTableContainer" style="display: none;">
+          <!-- Bulk Action Bar -->
+          <div style="margin-bottom: 1.2rem; display: flex; gap: 12px; justify-content: flex-end; align-items: center; background: white; padding: 12px 20px; border-radius: 15px; box-shadow: var(--card-shadow);">
+            <span style="font-weight: 700; font-size: 0.9rem; color: #666; margin-left: auto; display: flex; align-items: center; gap: 6px;">
+              <i class='bx bx-cog' style="font-size: 1.2rem; color: var(--topbar-bg);"></i> إجراءات سريعة للمجموعة:
+            </span>
+            <button class="btn-action" style="background: linear-gradient(135deg, #5cb85c, #4cae4c); height: 40px; padding: 0 18px; font-size: 0.9rem; border-radius: 8px;" onclick="markAllStatus('present')">
+              <i class='bx bx-check-double'></i> حضور الكل
+            </button>
+            <button class="btn-action" style="background: linear-gradient(135deg, #d9534f, #d43f3a); height: 40px; padding: 0 18px; font-size: 0.9rem; border-radius: 8px;" onclick="markAllStatus('absent')">
+              <i class='bx bx-user-x'></i> غياب الكل
+            </button>
+          </div>
+
           <div class="attendance-table-card">
             <table class="data-table">
               <thead>
@@ -305,6 +318,15 @@
       const parent = btn.parentElement;
       parent.querySelectorAll('.status-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+    }
+
+    function markAllStatus(status) {
+      document.querySelectorAll('#manualTbody tr').forEach(tr => {
+        const btn = tr.querySelector(`.status-pill.${status}`);
+        if (btn) {
+          setRowStatus(btn, status);
+        }
+      });
     }
 
     async function saveBulkManual() {

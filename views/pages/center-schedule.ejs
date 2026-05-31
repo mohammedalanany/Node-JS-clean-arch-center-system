@@ -40,6 +40,34 @@
     .legend { display: flex; gap: 1.5rem; margin-top: 1.5rem; background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); width: fit-content; }
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
     .dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* Modal Styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 2rem; backdrop-filter: blur(4px); }
+    .modal-card { background: white; width: 100%; max-width: 650px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { background: linear-gradient(135deg, #4aa3df, #2980b9); color: white; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .close-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .close-btn:hover { background: rgba(255,255,255,0.4); }
+    .modal-body { padding: 1.5rem; max-height: 70vh; overflow-y: auto; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 1rem; background: #fafafa; }
+    
+    .modal-body .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.25rem; }
+    .modal-body .form-group label { font-weight: 700; font-size: 0.85rem; color: #555; text-align: right; }
+    .modal-body .form-group select, .modal-body .form-group input { padding: 0.65rem; border: 1.5px solid #e0e0e0; border-radius: 8px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.2s; text-align: right; }
+    .modal-body .form-group select:focus { border-color: var(--primary); }
+
+    .schedule-row { padding: 0.6rem 0; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.75rem; align-items: center; border-bottom: 1px solid #f5f5f5; }
+    .schedule-row select, .schedule-row input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; width: 100%; }
+    .btn-add-row { background: #e8f5e9; color: #388e3c; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.85rem; margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .btn-add-row:hover { background: #388e3c; color: white; }
+    .btn-remove-row { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.1rem; }
+    .btn-remove-row:hover { color: #d9534f; }
+
+    .btn-cancel { background: #f0f0f0; color: #555; border: none; padding: 0.65rem 1.25rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; transition: 0.2s; }
+    .btn-cancel:hover { background: #e5e5e5; }
+    .btn-save { background: var(--primary); color: white; border: none; padding: 0.65rem 1.25rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; transition: 0.2s; }
+    .btn-save:hover { background: #3a93cf; }
   </style>
 </head>
 <body>
@@ -59,8 +87,11 @@
           <p style="color: #777;">عارض زمني لكافة مجموعات السنتر خلال أيام الأسبوع</p>
         </div>
         <div style="display: flex; gap: 10px;">
-          <button class="btn-primary" style="background:var(--primary); color:white; border:none; padding: 0.8rem 1.5rem; border-radius: 10px; font-family: inherit; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="location.href='/center/groups'">
-            <i class='bx bx-plus-circle'></i> إضافة/تعديل المواعيد
+          <button class="btn-primary" style="background:var(--primary); color:white; border:none; padding: 0.8rem 1.5rem; border-radius: 10px; font-family: inherit; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="openScheduleModal()">
+            <i class='bx bx-calendar-plus'></i> إضافة/تعديل المواعيد
+          </button>
+          <button class="btn-primary" style="background:#6c757d; color:white; border:none; padding: 0.8rem 1.5rem; border-radius: 10px; font-family: inherit; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="location.href='/center/groups'">
+            <i class='bx bx-collection'></i> إدارة المجموعات
           </button>
         </div>
       </div>
@@ -141,6 +172,185 @@
     </main>
   </div>
 
+  <!-- Manage Schedule Modal -->
+  <div class="modal-overlay" id="scheduleModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class='bx bx-calendar-edit'></i> إضافة وتعديل مواعيد المجموعات</h2>
+        <button class="close-btn" onclick="closeScheduleModal()">&times;</button>
+      </div>
+      <form id="scheduleForm" onsubmit="handleSaveSchedule(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>اختر المجموعة الدراسية *</label>
+            <select id="scheduleGroupSelect" onchange="onGroupSelectChange()" required>
+              <option value="">-- اختر مجموعة لتحميل مواعيدها --</option>
+              <% groups.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div id="scheduleBuilderSection" style="display: none; margin-top: 1.5rem;">
+            <div style="font-weight: 800; font-size: 0.9rem; color: #555; margin-bottom: 0.75rem; border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem; text-align: right;">
+              جدول المواعيد الأسبوعية للمجموعة:
+            </div>
+            
+            <div id="modalScheduleRows">
+              <!-- Dynamically populated rows -->
+            </div>
+            
+            <button type="button" class="btn-add-row" onclick="addModalScheduleRow()">
+              <i class='bx bx-plus'></i> إضافة موعد جديد
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" onclick="closeScheduleModal()">إلغاء</button>
+          <button type="submit" id="saveScheduleBtn" class="btn-save" style="display: none;"><i class='bx bx-check'></i> حفظ المواعيد</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const DAYS = [
+      { val: 'saturday',  label: 'السبت' },
+      { val: 'sunday',    label: 'الأحد' },
+      { val: 'monday',    label: 'الإثنين' },
+      { val: 'tuesday',   label: 'الثلاثاء' },
+      { val: 'wednesday', label: 'الأربعاء' },
+      { val: 'thursday',  label: 'الخميس' },
+      { val: 'friday',    label: 'الجمعة' },
+    ];
+
+    function openScheduleModal() {
+      document.getElementById('scheduleModal').style.display = 'flex';
+      document.getElementById('scheduleGroupSelect').value = '';
+      document.getElementById('scheduleBuilderSection').style.display = 'none';
+      document.getElementById('saveScheduleBtn').style.display = 'none';
+      document.getElementById('modalScheduleRows').innerHTML = '';
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('scheduleModal').style.display = 'none';
+    }
+
+    async function onGroupSelectChange() {
+      const groupId = document.getElementById('scheduleGroupSelect').value;
+      const builderSection = document.getElementById('scheduleBuilderSection');
+      const saveBtn = document.getElementById('saveScheduleBtn');
+      const container = document.getElementById('modalScheduleRows');
+      
+      container.innerHTML = '';
+
+      if (!groupId) {
+        builderSection.style.display = 'none';
+        saveBtn.style.display = 'none';
+        return;
+      }
+
+      Swal.fire({
+        title: 'جاري تحميل مواعيد المجموعة...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const res = await fetch(`/api/v1/groups/${groupId}`);
+        const result = await res.json();
+        
+        Swal.close();
+
+        if (result.success) {
+          builderSection.style.display = 'block';
+          saveBtn.style.display = 'block';
+          
+          const group = result.data;
+          if (group.weeklySchedule && group.weeklySchedule.length > 0) {
+            group.weeklySchedule.forEach(s => {
+              addModalScheduleRow(s.day, s.startTime, s.endTime);
+            });
+          } else {
+            addModalScheduleRow();
+          }
+        } else {
+          Swal.fire('خطأ!', result.message || 'فشل تحميل بيانات المجموعة', 'error');
+        }
+      } catch (err) {
+        Swal.close();
+        Swal.fire('خطأ!', 'حدث خطأ فني أثناء تحميل البيانات', 'error');
+      }
+    }
+
+    function addModalScheduleRow(day = 'saturday', startTime = '08:00', endTime = '09:00') {
+      const container = document.getElementById('modalScheduleRows');
+      const div = document.createElement('div');
+      div.className = 'schedule-row';
+      const dayOptions = DAYS.map(d => `<option value="${d.val}" ${d.val === day ? 'selected' : ''}>${d.label}</option>`).join('');
+      
+      div.innerHTML = `
+        <select class="sched-day">${dayOptions}</select>
+        <input type="time" class="sched-start" value="${startTime}">
+        <input type="time" class="sched-end" value="${endTime}">
+        <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()"><i class='bx bx-x'></i></button>
+      `;
+      container.appendChild(div);
+    }
+
+    async function handleSaveSchedule(e) {
+      e.preventDefault();
+      
+      const groupId = document.getElementById('scheduleGroupSelect').value;
+      if (!groupId) return;
+
+      const rows = document.querySelectorAll('#modalScheduleRows .schedule-row');
+      const weeklySchedule = Array.from(rows).map(row => ({
+        day: row.querySelector('.sched-day').value,
+        startTime: row.querySelector('.sched-start').value,
+        endTime: row.querySelector('.sched-end').value,
+      }));
+
+      Swal.fire({
+        title: 'جاري حفظ التعديلات...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const updateData = {
+          weeklySchedule
+        };
+
+        const res = await fetch(`/api/v1/groups/${groupId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        });
+
+        const r = await res.json();
+        
+        Swal.close();
+
+        if (res.ok && r.success) {
+          await Swal.fire({
+            title: 'تم الحفظ!',
+            text: 'تم تحديث مواعيد المجموعة بنجاح.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          location.reload();
+        } else {
+          Swal.fire('خطأ!', r.message || 'فشل حفظ المواعيد', 'error');
+        }
+      } catch (err) {
+        Swal.close();
+        Swal.fire('خطأ!', 'حدث خطأ فني أثناء الاتصال بالسيرفر', 'error');
+      }
+    }
+  </script>
 
 </body>
 </html>
