@@ -1,5 +1,8 @@
 import { CenterRepository } from './center.repository';
 import { createError } from '../../shared/middlewares/error.middleware';
+import { UserRepository } from '../auth/user.repository';
+import { UserRole } from '../auth/user.entity';
+import bcrypt from 'bcrypt';
 
 export class CenterService {
   async createCenter(data: { name: string; address?: string; phone?: string; email?: string }) {
@@ -14,7 +17,23 @@ export class CenterService {
     }
 
     const center = CenterRepository.create({ ...data, slug });
-    return CenterRepository.save(center);
+    const savedCenter = await CenterRepository.save(center);
+
+    // Create default admin account for this center
+    const defaultEmail = data.email || `admin@${slug}.com`;
+    const hashedPassword = await bcrypt.hash('123456', 10);
+    const adminUser = UserRepository.create({
+      firstName: 'مدير',
+      lastName: 'السنتر',
+      email: defaultEmail,
+      password: hashedPassword,
+      role: UserRole.ADMIN,
+      centerId: savedCenter.id,
+      isActive: true,
+    });
+    await UserRepository.save(adminUser);
+
+    return savedCenter;
   }
 
   async getAllCenters() {
