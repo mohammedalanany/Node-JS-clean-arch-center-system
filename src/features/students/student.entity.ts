@@ -41,7 +41,7 @@ export class Student {
   @Column({ length: 50 })
   lastName!: string;
 
-  @Column({ unique: true, nullable: true, length: 50 })
+  @Column({ nullable: true, length: 50 })
   barcode?: string;
 
   @Column({ nullable: true })
