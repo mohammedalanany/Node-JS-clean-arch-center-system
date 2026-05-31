@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import path from 'path';
 import { DataSource } from 'typeorm';
 import { Center } from '../shared/entities/center.entity';
 import { User } from '../features/auth/user.entity';
@@ -25,6 +26,6 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: process.env.NODE_ENV === 'development',
   entities: [Center, User, Student, Group, Attendance, Payment, Exam, ExamResult, Notification, Advertisement],
-  migrations: ['src/migrations/*.ts'],
+  migrations: [path.join(__dirname, '../migrations/**/*{.js,.ts}')],
   subscribers: [],
 });
