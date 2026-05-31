@@ -63,6 +63,17 @@ AppDataSource.initialize()
   })
   .catch((err) => {
     console.error('❌ Database connection failed:', err);
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const logPath = path.join(__dirname, '../crash.log');
+      fs.appendFileSync(
+        logPath,
+        `[${new Date().toISOString()}] === DATABASE CONNECTION FAILED ===\n${err.stack || err}\n\n`
+      );
+    } catch (e) {
+      console.error('Failed to write to crash.log:', e);
+    }
     process.exit(1);
   });
 
