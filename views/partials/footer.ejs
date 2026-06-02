@@ -6,3 +6,143 @@
     <a href="https://entlqsa.com" target="_blank" style="color: var(--primary, #4aa3df); text-decoration: none; font-weight: 600;">entlqsa.com</a>
   </div>
 </footer>
+
+<style>
+  /* --- Superadmin & Global Responsive Overrides --- */
+  @media (max-width: 768px) {
+    /* Hide superadmin desktop sidebar on mobile and make it slide-in */
+    .sidebar {
+      position: fixed !important;
+      right: -280px !important;
+      left: auto !important;
+      top: 0;
+      bottom: 0;
+      height: 100vh;
+      min-height: 100vh;
+      width: 280px !important;
+      z-index: 1001;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+      background: #1e293b !important; /* dark slate panel */
+      display: flex !important;
+      padding: 1.5rem !important;
+    }
+    .sidebar.active {
+      right: 0 !important;
+    }
+
+    /* Backdrop overlay for superadmin sidebar */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.active {
+      display: block;
+    }
+    
+    /* Superadmin Floating Toggle Button */
+    .sa-mobile-toggle {
+      display: flex !important;
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4aa3df, #2980b9);
+      color: white;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 4px 15px rgba(74, 163, 223, 0.4);
+      z-index: 1002;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .sa-mobile-toggle:active {
+      transform: scale(0.9);
+    }
+    
+    /* Superadmin header adjustments */
+    .top-header {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 15px !important;
+      margin-bottom: 2rem !important;
+    }
+    .top-header > div:last-child {
+      align-self: flex-start !important;
+    }
+
+    /* Make sure main-content expands fully on mobile */
+    body {
+      overflow-x: hidden;
+    }
+    .main-content {
+      padding: 1rem !important;
+      width: 100% !important;
+      min-width: 100% !important;
+    }
+  }
+  
+  /* Desktop Hide Floating Button */
+  .sa-mobile-toggle {
+    display: none;
+  }
+</style>
+
+<script>
+  (function() {
+    function initSuperadminMobile() {
+      const sidebar = document.querySelector(".sidebar");
+      if (!sidebar) return; // Only run on pages that have the superadmin sidebar
+      
+      // Create a floating menu button
+      let toggleBtn = document.getElementById("saMobileToggle");
+      if (!toggleBtn) {
+        toggleBtn = document.createElement("div");
+        toggleBtn.id = "saMobileToggle";
+        toggleBtn.className = "sa-mobile-toggle";
+        toggleBtn.innerHTML = "<i class='bx bx-menu'></i>";
+        document.body.appendChild(toggleBtn);
+        
+        // Create backdrop if not already present
+        let backdrop = document.getElementById("saSidebarBackdrop");
+        if (!backdrop) {
+          backdrop = document.createElement("div");
+          backdrop.id = "saSidebarBackdrop";
+          backdrop.className = "sidebar-backdrop";
+          document.body.appendChild(backdrop);
+          
+          backdrop.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+            backdrop.classList.remove("active");
+          });
+        }
+        
+        toggleBtn.addEventListener("click", () => {
+          sidebar.classList.toggle("active");
+          if (sidebar.classList.contains("active")) {
+            backdrop.classList.add("active");
+          } else {
+            backdrop.classList.remove("active");
+          }
+        });
+      }
+    }
+    
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initSuperadminMobile);
+    } else {
+      initSuperadminMobile();
+    }
+  })();
+</script>

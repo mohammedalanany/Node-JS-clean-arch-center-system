@@ -116,11 +116,6 @@
     color: #ff7675;
     background: rgba(255, 118, 117, 0.05);
   }
-  .main-sidebar .nav-item.logout:hover {
-    background: rgba(255, 118, 117, 0.15);
-    color: #ff4d4d;
-  }
-
   /* Compatibility for Page Wrapper */
   .wrapper {
     flex: 1;
@@ -128,6 +123,123 @@
     flex-direction: column;
     min-width: 0;
     background: #f8f9fa;
+  }
+
+  /* --- Mobile & General Responsive Overrides --- */
+  @media (max-width: 768px) {
+    .main-sidebar {
+      position: fixed !important;
+      right: -260px !important;
+      left: auto !important;
+      top: 0;
+      bottom: 0;
+      height: 100vh;
+      min-height: 100vh;
+      width: var(--sidebar-width-expanded) !important;
+      z-index: 1001;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.25);
+    }
+    .main-sidebar.expanded {
+      right: 0 !important;
+    }
+    .main-sidebar .brand-text,
+    .main-sidebar .nav-text {
+      opacity: 1 !important;
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.active {
+      display: block;
+    }
+
+    /* Page Wrapper and Main Content */
+    .wrapper {
+      min-width: 100% !important;
+      width: 100% !important;
+    }
+    .main-content {
+      padding: 1rem !important;
+    }
+    .topbar {
+      padding: 0 1rem !important;
+    }
+
+    /* Stack Header Actions */
+    .header-actions, .page-header {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 12px !important;
+      margin-bottom: 1.5rem !important;
+    }
+    .header-actions button, .header-actions a,
+    .page-header button, .page-header a,
+    .btn-primary, .btn-action {
+      width: 100% !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+
+    /* Generic Stats Rows */
+    .stats-container, .stats-row, .stats-grid {
+      grid-template-columns: 1fr !important;
+      gap: 1rem !important;
+      margin-bottom: 1.5rem !important;
+    }
+
+    /* Table Horizontal Scroll Styling */
+    .card {
+      padding: 1rem !important;
+    }
+    table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    th, td {
+      padding: 0.75rem 0.5rem !important;
+      font-size: 0.85rem !important;
+      white-space: nowrap;
+    }
+
+    /* Grid layout stack */
+    .tiles-grid, .groups-grid, .grid {
+      grid-template-columns: 1fr !important;
+      gap: 1rem !important;
+    }
+
+    /* Form and Modals */
+    .form-grid {
+      grid-template-columns: 1fr !important;
+      gap: 1rem !important;
+    }
+    .form-group[style*="grid-column: span"], .form-group {
+      grid-column: span 1 !important;
+    }
+    .modal-overlay {
+      padding: 1rem !important;
+    }
+    .modal-card {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .modal-body {
+      padding: 1.25rem !important;
+    }
+    .modal-header, .modal-footer {
+      padding: 1rem 1.25rem !important;
+    }
   }
 </style>
 
@@ -214,6 +326,23 @@
       const sidebar = document.getElementById("mainSidebar");
       const topbar = document.querySelector(".topbar");
       
+      if (!sidebar) return;
+      
+      // Create backdrop for mobile
+      let backdrop = document.getElementById("sidebarBackdrop");
+      if (!backdrop) {
+        backdrop = document.createElement("div");
+        backdrop.id = "sidebarBackdrop";
+        backdrop.className = "sidebar-backdrop";
+        document.body.appendChild(backdrop);
+        
+        backdrop.addEventListener("click", () => {
+          sidebar.classList.remove("expanded");
+          backdrop.classList.remove("active");
+          localStorage.setItem("sidebar-expanded", "false");
+        });
+      }
+
       if (topbar && !document.getElementById("sidebarToggleBtn")) {
         const toggleBtn = document.createElement("i");
         toggleBtn.className = "bx bx-menu";
@@ -224,12 +353,17 @@
         
         toggleBtn.addEventListener("click", () => {
           sidebar.classList.toggle("expanded");
-          // Save preference
           localStorage.setItem("sidebar-expanded", sidebar.classList.contains("expanded"));
+          
+          if (sidebar.classList.contains("expanded")) {
+            backdrop.classList.add("active");
+          } else {
+            backdrop.classList.remove("active");
+          }
         });
 
-        // Restore state
-        if (localStorage.getItem("sidebar-expanded") === "true") {
+        // Restore state (only on desktop since we don't want it open by default on mobile refresh)
+        if (window.innerWidth > 768 && localStorage.getItem("sidebar-expanded") === "true") {
           sidebar.classList.add("expanded");
         }
       }
@@ -242,3 +376,5 @@
     }
   })();
 </script>
+
+

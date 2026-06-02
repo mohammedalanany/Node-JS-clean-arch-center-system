@@ -1,5 +1,5 @@
 import { AppDataSource } from './src/config/data-source';
-import { User } from './src/entities/User';
+import { User } from './src/features/auth/user.entity';
 import * as bcrypt from 'bcrypt';
 
 async function updatePassword() {
